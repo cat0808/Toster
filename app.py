@@ -2,13 +2,19 @@ import json
 import os
 import random
 import re
+import shutil
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
+from typing import Any
 
 import requests
-import vlc
 from PIL import Image, ImageTk
+
+try:
+    import vlc  # type: ignore
+except Exception:
+    vlc = None
 
 
 class MultimediaHub(tk.Tk):
@@ -20,10 +26,11 @@ class MultimediaHub(tk.Tk):
         self.geometry("1100x760")
         self.minsize(980, 680)
 
-        self.player: vlc.MediaPlayer | None = None
+        self.player: Any = None
         self.current_media_path: Path | None = None
         self.image_tk: ImageTk.PhotoImage | None = None
         self.image_path: Path | None = None
+        self.vlc_ready = vlc is not None
 
         self.board: list[int] = []
         self.board_buttons: list[tk.Button] = []
@@ -31,6 +38,16 @@ class MultimediaHub(tk.Tk):
         self._create_styles()
         self._build_ui()
         self._init_puzzle()
+
+        if not self.vlc_ready:
+            self.after(
+                250,
+                lambda: messagebox.showwarning(
+                    "VLC не найден",
+                    "Не удалось загрузить libVLC. Установите VLC Media Player и перезапустите приложение.\n"
+                    "Программа продолжит работу, но локальное воспроизведение музыки будет недоступно.",
+                ),
+            )
 
     # ------------------------------ UI ---------------------------------
     def _create_styles(self) -> None:
@@ -101,6 +118,9 @@ class MultimediaHub(tk.Tk):
 
         controls.columnconfigure(1, weight=1)
         controls.columnconfigure(2, weight=1)
+
+        if not self.vlc_ready:
+            self.music_file_var.set("VLC/libVLC не найдены — установите VLC для работы вкладки музыки")
 
     # ----------------------------- VIDEO --------------------------------
     def _build_video_tab(self) -> None:
@@ -379,9 +399,18 @@ class MultimediaHub(tk.Tk):
         if not self.current_media_path:
             messagebox.showinfo("Нет файла", "Сначала выберите видео")
             return
-        os.startfile(self.current_media_path) if os.name == "nt" else os.system(f'xdg-open "{self.current_media_path}"')
+        if os.name == "nt":
+            os.startfile(self.current_media_path)
+            return
+        opener = shutil.which("xdg-open") or shutil.which("open")
+        if opener:
+            os.system(f'{opener} "{self.current_media_path}"')
+        else:
+            messagebox.showerror("Ошибка", "Не удалось найти системный инструмент для открытия видео.")
 
     def _prepare_media_player(self, path: Path) -> None:
+        if not self.vlc_ready:
+            return
         if self.player is not None:
             self.player.stop()
         self.player = vlc.MediaPlayer(str(path))
@@ -390,6 +419,9 @@ class MultimediaHub(tk.Tk):
         self.apply_equalizer()
 
     def play_media(self) -> None:
+        if not self.vlc_ready:
+            messagebox.showwarning("VLC не установлен", "Установите VLC Media Player для воспроизведения музыки.")
+            return
         if self.player is None:
             messagebox.showinfo("Нет аудио", "Сначала выберите аудио файл")
             return
@@ -404,15 +436,15 @@ class MultimediaHub(tk.Tk):
             self.player.stop()
 
     def on_volume_change(self, _value: str) -> None:
-        if self.player:
+        if self.vlc_ready and self.player:
             self.player.audio_set_volume(int(self.volume_scale.get()))
 
     def on_speed_change(self, _value: str) -> None:
-        if self.player:
+        if self.vlc_ready and self.player:
             self.player.set_rate(float(self.speed_scale.get()))
 
     def apply_equalizer(self) -> None:
-        if not self.player:
+        if not self.vlc_ready or not self.player:
             return
 
         preset_map = {
