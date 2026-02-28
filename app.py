@@ -2,7 +2,6 @@ import json
 import os
 import random
 import re
-import shutil
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, ttk
@@ -17,7 +16,6 @@ except Exception:
     vlc = None
 
 
-# Настройки GigaChat перенесены в программу (не в UI)
 GIGACHAT_CLIENT_ID = os.getenv("GIGACHAT_CLIENT_ID", "")
 GIGACHAT_CLIENT_SECRET = os.getenv("GIGACHAT_CLIENT_SECRET", "")
 GIGACHAT_MODEL = "GigaChat"
@@ -27,12 +25,21 @@ AUDIO_EXT = {".mp3", ".wav", ".flac", ".ogg", ".m4a"}
 VIDEO_EXT = {".mp4", ".avi", ".mkv", ".mov", ".webm"}
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
 
+TILE_SYMBOLS = [
+    "🐶", "🐱", "🦊", "🐻",
+    "🐼", "🐨", "🐯", "🦁",
+    "🐸", "🐵", "🐷", "🐔",
+    "🐙", "🐢", "🦋",
+]
+
+MEMORY_SYMBOLS = ["🍎", "🍌", "🍇", "🍒", "🍉", "🥝", "🍍", "🍓"]
+
 
 class MultimediaHub(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("Multimedia Hub")
-        self.geometry("1150x780")
+        self.geometry("1160x800")
         self.minsize(1000, 700)
 
         self.player: Any = None
@@ -43,16 +50,18 @@ class MultimediaHub(tk.Tk):
         self.vlc_ready = vlc is not None
 
         self.theme_var = tk.StringVar(value="Светлая")
+
         self.board: list[int] = []
         self.board_buttons: list[tk.Button] = []
-        self.memory_values: list[int] = []
+
+        self.memory_values: list[str] = []
         self.memory_buttons: list[tk.Button] = []
         self.memory_opened: list[int] = []
         self.memory_locked = False
 
         self._create_styles(dark=False)
         self._build_ui()
-        self._init_puzzle_15()
+        self._init_emoji_puzzle()
         self._init_memory_puzzle()
         self.refresh_file_lists()
 
@@ -94,9 +103,15 @@ class MultimediaHub(tk.Tk):
         text_bg = "#202020" if dark else "#ffffff"
         text_fg = "#f0f0f0" if dark else "#101010"
         canvas_bg = "#101010" if dark else "#e8e8e8"
+        list_bg = "#2a2a2a" if dark else "#ffffff"
+        list_fg = "#f0f0f0" if dark else "#101010"
 
         for txt in [self.prompt_text, self.answer_text]:
             txt.configure(bg=text_bg, fg=text_fg, insertbackground=text_fg)
+
+        for lb in [self.audio_listbox, self.video_listbox, self.image_listbox]:
+            lb.configure(bg=list_bg, fg=list_fg, selectbackground="#4a77d4" if dark else "#8db1ff")
+
         self.image_canvas.configure(bg=canvas_bg)
 
     # ------------------------- UI -------------------------------------
@@ -105,11 +120,17 @@ class MultimediaHub(tk.Tk):
         top_bar.pack(fill="x", padx=10, pady=(10, 0))
 
         ttk.Label(top_bar, text="Тема:").pack(side="left")
-        theme_combo = ttk.Combobox(top_bar, textvariable=self.theme_var, state="readonly", values=["Светлая", "Тёмная"], width=12)
+        theme_combo = ttk.Combobox(
+            top_bar,
+            textvariable=self.theme_var,
+            state="readonly",
+            values=["Светлая", "Тёмная"],
+            width=12,
+        )
         theme_combo.pack(side="left", padx=8)
         theme_combo.bind("<<ComboboxSelected>>", lambda _e: self.toggle_theme())
 
-        ttk.Button(top_bar, text="Обновить файлы проекта", command=self.refresh_file_lists).pack(side="right")
+        ttk.Button(top_bar, text="Обновить файлы", command=self.refresh_file_lists).pack(side="right")
 
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
@@ -134,7 +155,7 @@ class MultimediaHub(tk.Tk):
 
     # ---------------------- FILE SCAN ---------------------------------
     def _scan_project_files(self, extensions: set[str]) -> list[Path]:
-        files = []
+        files: list[Path] = []
         for path in PROJECT_ROOT.rglob("*"):
             if path.is_file() and path.suffix.lower() in extensions:
                 files.append(path)
@@ -151,12 +172,12 @@ class MultimediaHub(tk.Tk):
 
     def _fill_listbox(self, listbox: tk.Listbox, files: list[Path]) -> None:
         listbox.delete(0, "end")
-        for f in files:
-            listbox.insert("end", str(f.relative_to(PROJECT_ROOT)))
+        for file_path in files:
+            listbox.insert("end", str(file_path.relative_to(PROJECT_ROOT)))
 
     # ---------------------- MUSIC -------------------------------------
     def _build_music_tab(self) -> None:
-        frame = ttk.LabelFrame(self.music_tab, text="Музыка из корня проекта")
+        frame = ttk.LabelFrame(self.music_tab, text="Музыка")
         frame.pack(fill="both", expand=True, padx=12, pady=12)
 
         left = ttk.Frame(frame)
@@ -193,33 +214,40 @@ class MultimediaHub(tk.Tk):
 
     # ---------------------- VIDEO -------------------------------------
     def _build_video_tab(self) -> None:
-        frame = ttk.LabelFrame(self.video_tab, text="Видео из корня проекта")
+        frame = ttk.LabelFrame(self.video_tab, text="Видео")
         frame.pack(fill="both", expand=True, padx=12, pady=12)
 
         self.video_listbox = tk.Listbox(frame, height=20)
         self.video_listbox.pack(fill="both", expand=True, padx=10, pady=10)
         self.video_listbox.bind("<<ListboxSelect>>", lambda _e: self.select_video())
 
-        controls = ttk.Frame(frame)
-        controls.pack(fill="x", padx=10, pady=(0, 10))
+        info = ttk.Frame(frame)
+        info.pack(fill="x", padx=10, pady=(0, 10))
+
         self.video_label = tk.StringVar(value="Выберите видео")
-        ttk.Label(controls, textvariable=self.video_label, wraplength=700).pack(side="left")
-        ttk.Button(controls, text="Открыть во внешнем плеере", command=self.open_video_external).pack(side="right")
+        ttk.Label(info, textvariable=self.video_label, wraplength=900).pack(anchor="w")
+
+        ttk.Label(
+            info,
+            text="Внешний плеер отключён по требованию. Сейчас доступен выбор файла и информация о нём.",
+        ).pack(anchor="w", pady=(6, 0))
 
     def select_video(self) -> None:
         idx = self._selected_index(self.video_listbox)
         if idx is None:
             return
         self.current_video_path = self.video_files[idx]
-        self.video_label.set(f"Видео: {self.current_video_path.name}")
+        size_mb = self.current_video_path.stat().st_size / (1024 * 1024)
+        self.video_label.set(f"Видео: {self.current_video_path.name} | Размер: {size_mb:.2f} MB")
 
     # ---------------------- IMAGES ------------------------------------
     def _build_image_tab(self) -> None:
-        frame = ttk.LabelFrame(self.image_tab, text="Картинки из корня проекта")
+        frame = ttk.LabelFrame(self.image_tab, text="Картинки")
         frame.pack(fill="both", expand=True, padx=12, pady=12)
 
         left = ttk.Frame(frame)
         left.pack(side="left", fill="y", padx=8, pady=8)
+
         self.image_listbox = tk.Listbox(left, width=40)
         self.image_listbox.pack(fill="y", expand=False)
         self.image_listbox.bind("<<ListboxSelect>>", lambda _e: self.select_image())
@@ -252,59 +280,83 @@ class MultimediaHub(tk.Tk):
 
     # ---------------------- PUZZLES -----------------------------------
     def _build_puzzle_tab(self) -> None:
-        outer = ttk.Frame(self.puzzle_tab)
-        outer.pack(fill="both", expand=True, padx=12, pady=12)
+        container = ttk.Frame(self.puzzle_tab)
+        container.pack(fill="both", expand=True, padx=12, pady=12)
 
-        left = ttk.LabelFrame(outer, text="Пятнашки 4x4")
-        left.pack(side="left", fill="both", expand=True, padx=(0, 8))
+        self.puzzle_notebook = ttk.Notebook(container)
+        self.puzzle_notebook.pack(fill="both", expand=True)
 
-        top = ttk.Frame(left)
+        self.emoji_tab = ttk.Frame(self.puzzle_notebook)
+        self.memory_tab = ttk.Frame(self.puzzle_notebook)
+
+        self.puzzle_notebook.add(self.emoji_tab, text="Пазл с эмодзи")
+        self.puzzle_notebook.add(self.memory_tab, text="Найди пару")
+
+        self._build_emoji_tab()
+        self._build_memory_tab()
+
+    def _build_emoji_tab(self) -> None:
+        top = ttk.Frame(self.emoji_tab)
         top.pack(fill="x", padx=8, pady=8)
-        ttk.Button(top, text="Новая игра", command=self.shuffle_puzzle_15).pack(side="left")
-        self.puzzle_status = tk.StringVar(value="Соберите пазл")
+
+        ttk.Button(top, text="Новая игра", command=self.shuffle_emoji_puzzle).pack(side="left")
+        self.puzzle_status = tk.StringVar(value="Соберите эмодзи в правильный порядок")
         ttk.Label(top, textvariable=self.puzzle_status).pack(side="left", padx=10)
 
-        board = ttk.Frame(left)
-        board.pack(pady=8)
+        board = ttk.Frame(self.emoji_tab)
+        board.pack(pady=12)
 
         for i in range(4):
             for j in range(4):
-                btn = tk.Button(board, text="", width=5, height=2, font=("Segoe UI", 13, "bold"), command=lambda idx=i * 4 + j: self.move_tile(idx))
+                btn = tk.Button(
+                    board,
+                    text="",
+                    width=5,
+                    height=2,
+                    font=("Segoe UI Emoji", 18),
+                    command=lambda idx=i * 4 + j: self.move_emoji_tile(idx),
+                )
                 btn.grid(row=i, column=j, padx=3, pady=3)
                 self.board_buttons.append(btn)
 
-        right = ttk.LabelFrame(outer, text="Найди пару (новая головоломка)")
-        right.pack(side="right", fill="both", expand=True, padx=(8, 0))
+    def _build_memory_tab(self) -> None:
+        top = ttk.Frame(self.memory_tab)
+        top.pack(fill="x", padx=8, pady=8)
 
-        mtop = ttk.Frame(right)
-        mtop.pack(fill="x", padx=8, pady=8)
-        ttk.Button(mtop, text="Новая игра", command=self._init_memory_puzzle).pack(side="left")
+        ttk.Button(top, text="Новая игра", command=self._init_memory_puzzle).pack(side="left")
         self.memory_status = tk.StringVar(value="Открывайте карточки и ищите пары")
-        ttk.Label(mtop, textvariable=self.memory_status).pack(side="left", padx=8)
+        ttk.Label(top, textvariable=self.memory_status).pack(side="left", padx=10)
 
-        mboard = ttk.Frame(right)
-        mboard.pack(pady=10)
+        board = ttk.Frame(self.memory_tab)
+        board.pack(pady=12)
 
         for i in range(4):
             for j in range(4):
                 idx = i * 4 + j
-                btn = tk.Button(mboard, text="?", width=5, height=2, font=("Segoe UI", 12, "bold"), command=lambda x=idx: self.memory_click(x))
+                btn = tk.Button(
+                    board,
+                    text="❓",
+                    width=5,
+                    height=2,
+                    font=("Segoe UI Emoji", 16),
+                    command=lambda x=idx: self.memory_click(x),
+                )
                 btn.grid(row=i, column=j, padx=3, pady=3)
                 self.memory_buttons.append(btn)
 
-    # 15 puzzle
-    def _init_puzzle_15(self) -> None:
+    # Emoji puzzle (бывшие пятнашки)
+    def _init_emoji_puzzle(self) -> None:
         self.board = list(range(1, 16)) + [0]
-        self.shuffle_puzzle_15()
+        self.shuffle_emoji_puzzle()
 
-    def shuffle_puzzle_15(self) -> None:
+    def shuffle_emoji_puzzle(self) -> None:
         self.board = list(range(1, 16)) + [0]
-        for _ in range(200):
+        for _ in range(240):
             empty = self.board.index(0)
             move = random.choice(self._possible_moves(empty))
             self.board[empty], self.board[move] = self.board[move], self.board[empty]
-        self.puzzle_status.set("Соберите пазл")
-        self._render_15()
+        self.puzzle_status.set("Соберите эмодзи в правильный порядок")
+        self._render_emoji_board()
 
     def _possible_moves(self, empty_idx: int) -> list[int]:
         row, col = divmod(empty_idx, 4)
@@ -319,48 +371,51 @@ class MultimediaHub(tk.Tk):
             moves.append(empty_idx + 1)
         return moves
 
-    def move_tile(self, idx: int) -> None:
+    def move_emoji_tile(self, idx: int) -> None:
         empty = self.board.index(0)
         if idx not in self._possible_moves(empty):
             return
         self.board[empty], self.board[idx] = self.board[idx], self.board[empty]
-        self._render_15()
+        self._render_emoji_board()
         if self.board == list(range(1, 16)) + [0]:
-            self.puzzle_status.set("Победа!")
+            self.puzzle_status.set("Победа! 🎉")
 
-    def _render_15(self) -> None:
-        for i, v in enumerate(self.board):
-            if v == 0:
-                self.board_buttons[i].configure(text="", state="disabled", bg="#bdbdbd")
+    def _render_emoji_board(self) -> None:
+        for i, value in enumerate(self.board):
+            btn = self.board_buttons[i]
+            if value == 0:
+                btn.configure(text="", state="disabled", bg="#bdbdbd")
             else:
-                self.board_buttons[i].configure(text=str(v), state="normal", bg="#e6f0ff")
+                btn.configure(text=TILE_SYMBOLS[value - 1], state="normal", bg="#e6f0ff")
 
-    # memory puzzle
+    # Memory puzzle
     def _init_memory_puzzle(self) -> None:
-        values = list(range(1, 9)) * 2
-        random.shuffle(values)
-        self.memory_values = values
+        symbols = MEMORY_SYMBOLS * 2
+        random.shuffle(symbols)
+        self.memory_values = symbols
         self.memory_opened = []
         self.memory_locked = False
+
         if hasattr(self, "memory_buttons"):
             for btn in self.memory_buttons:
-                btn.configure(text="?", state="normal", bg="#f4f4f4")
+                btn.configure(text="❓", state="normal", bg="#f4f4f4")
         if hasattr(self, "memory_status"):
             self.memory_status.set("Открывайте карточки и ищите пары")
 
     def memory_click(self, idx: int) -> None:
         if self.memory_locked or idx in self.memory_opened:
             return
+
         btn = self.memory_buttons[idx]
         if btn.cget("state") == "disabled":
             return
 
-        btn.configure(text=str(self.memory_values[idx]), bg="#fff4cc")
+        btn.configure(text=self.memory_values[idx], bg="#fff4cc")
         self.memory_opened.append(idx)
 
         if len(self.memory_opened) == 2:
             self.memory_locked = True
-            self.after(500, self._resolve_memory_pair)
+            self.after(550, self._resolve_memory_pair)
 
     def _resolve_memory_pair(self) -> None:
         i1, i2 = self.memory_opened
@@ -369,10 +424,10 @@ class MultimediaHub(tk.Tk):
         if self.memory_values[i1] == self.memory_values[i2]:
             b1.configure(state="disabled", bg="#d9ffd9")
             b2.configure(state="disabled", bg="#d9ffd9")
-            self.memory_status.set("Пара найдена!")
+            self.memory_status.set("Пара найдена")
         else:
-            b1.configure(text="?", bg="#f4f4f4")
-            b2.configure(text="?", bg="#f4f4f4")
+            b1.configure(text="❓", bg="#f4f4f4")
+            b2.configure(text="❓", bg="#f4f4f4")
 
         self.memory_opened = []
         self.memory_locked = False
@@ -385,38 +440,34 @@ class MultimediaHub(tk.Tk):
         frame = ttk.LabelFrame(self.ai_tab, text="Обращение к GigaChat")
         frame.pack(fill="both", expand=True, padx=12, pady=12)
 
-        filters = ttk.Frame(frame)
-        filters.pack(fill="x", padx=10, pady=8)
-
-        self.filter_profanity = tk.BooleanVar(value=True)
-        self.filter_pii = tk.BooleanVar(value=True)
-        self.filter_length = tk.BooleanVar(value=False)
-
-        ttk.Checkbutton(filters, text="Убирать нецензурные слова", variable=self.filter_profanity).pack(side="left", padx=8)
-        ttk.Checkbutton(filters, text="Скрывать телефоны/e-mail", variable=self.filter_pii).pack(side="left", padx=8)
-        ttk.Checkbutton(filters, text="Обрезать ответ до 500 символов", variable=self.filter_length).pack(side="left", padx=8)
+        ttk.Label(
+            frame,
+            text="Фильтрация включена автоматически: нецензурные слова, телефоны/e-mail и ограничение длины ответа.",
+            wraplength=950,
+        ).pack(anchor="w", padx=10, pady=(8, 2))
 
         self.prompt_text = tk.Text(frame, height=6, font=("Segoe UI", 11))
         self.prompt_text.pack(fill="x", padx=10, pady=8)
 
         ttk.Button(frame, text="Отправить в GigaChat", command=self.send_to_gigachat).pack(anchor="w", padx=10)
 
-        self.answer_text = tk.Text(frame, wrap="word", font=("Segoe UI", 11))
+        self.answer_text = tk.Text(frame, wrap="word", font=("Segoe UI", 11), state="disabled")
         self.answer_text.pack(fill="both", expand=True, padx=10, pady=10)
 
-    def _apply_input_filters(self, text: str) -> str:
-        if self.filter_profanity.get():
-            for word in ["дурак", "идиот", "черт"]:
-                text = re.sub(fr"\b{word}\b", "***", text, flags=re.IGNORECASE)
-        if self.filter_pii.get():
-            text = re.sub(r"\+?\d[\d\-\s]{8,}\d", "[PHONE_HIDDEN]", text)
-            text = re.sub(r"[\w.+-]+@[\w-]+\.[\w.-]+", "[EMAIL_HIDDEN]", text)
+    def _filter_message(self, text: str) -> str:
+        for word in ["дурак", "идиот", "черт"]:
+            text = re.sub(fr"\b{word}\b", "***", text, flags=re.IGNORECASE)
+        text = re.sub(r"\+?\d[\d\-\s]{8,}\d", "[PHONE_HIDDEN]", text)
+        text = re.sub(r"[\w.+-]+@[\w-]+\.[\w.-]+", "[EMAIL_HIDDEN]", text)
+        if len(text) > 500:
+            text = text[:500] + "\n\n[Текст обрезан до 500 символов]"
         return text
 
-    def _apply_output_filters(self, text: str) -> str:
-        if self.filter_length.get() and len(text) > 500:
-            return text[:500] + "\n\n[Ответ обрезан фильтром длины]"
-        return text
+    def _set_answer_text(self, text: str) -> None:
+        self.answer_text.configure(state="normal")
+        self.answer_text.delete("1.0", "end")
+        self.answer_text.insert("1.0", text)
+        self.answer_text.configure(state="disabled")
 
     def send_to_gigachat(self) -> None:
         prompt = self.prompt_text.get("1.0", "end").strip()
@@ -424,19 +475,17 @@ class MultimediaHub(tk.Tk):
             messagebox.showwarning("Пустой запрос", "Введите текст запроса")
             return
 
-        self.answer_text.delete("1.0", "end")
-        self.answer_text.insert("1.0", "Отправка запроса...")
+        filtered_prompt = self._filter_message(prompt)
+        self._set_answer_text("Отправка запроса...")
         self.update_idletasks()
 
         try:
             token = self._gigachat_token()
-            answer = self._gigachat_chat(token, self._apply_input_filters(prompt))
-            answer = self._apply_output_filters(answer)
-            self.answer_text.delete("1.0", "end")
-            self.answer_text.insert("1.0", answer)
+            answer = self._gigachat_chat(token, filtered_prompt)
+            answer = self._filter_message(answer)
+            self._set_answer_text(answer)
         except Exception as exc:
-            self.answer_text.delete("1.0", "end")
-            self.answer_text.insert("1.0", f"Ошибка: {exc}")
+            self._set_answer_text(f"Ошибка: {exc}")
 
     def _gigachat_token(self) -> str:
         if not GIGACHAT_CLIENT_ID or not GIGACHAT_CLIENT_SECRET:
@@ -476,10 +525,10 @@ class MultimediaHub(tk.Tk):
 
     # ---------------------- MEDIA CORE --------------------------------
     def _selected_index(self, listbox: tk.Listbox) -> int | None:
-        sel = listbox.curselection()
-        if not sel:
+        selected = listbox.curselection()
+        if not selected:
             return None
-        return int(sel[0])
+        return int(selected[0])
 
     def _prepare_media_player(self, path: Path) -> None:
         if not self.vlc_ready:
@@ -509,21 +558,6 @@ class MultimediaHub(tk.Tk):
     def on_volume_change(self, _value: str) -> None:
         if self.player:
             self.player.audio_set_volume(int(self.volume_scale.get()))
-
-    def open_video_external(self) -> None:
-        if not self.current_video_path:
-            messagebox.showinfo("Нет файла", "Выберите видео файл из списка")
-            return
-
-        if os.name == "nt":
-            os.startfile(self.current_video_path)
-            return
-
-        opener = shutil.which("xdg-open") or shutil.which("open")
-        if opener:
-            os.system(f'{opener} "{self.current_video_path}"')
-        else:
-            messagebox.showerror("Ошибка", "Не найден инструмент для открытия видео")
 
 
 if __name__ == "__main__":
