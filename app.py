@@ -25,9 +25,6 @@ AUDIO_EXT = {".mp3", ".wav", ".flac", ".ogg", ".m4a"}
 VIDEO_EXT = {".mp4", ".avi", ".mkv", ".mov", ".webm"}
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
 
-TILE_SYMBOLS = [
-    "🐶", "🐱", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐸", "🐵", "🐷", "🐔", "🐙", "🐢", "🦋"
-]
 MEMORY_SYMBOLS = ["🍎", "🍌", "🍇", "🍒", "🍉", "🥝", "🍍", "🍓"]
 
 
@@ -258,7 +255,7 @@ class MultimediaHub(tk.Tk):
 
         self.emoji_tab = ttk.Frame(self.puzzle_notebook)
         self.memory_tab = ttk.Frame(self.puzzle_notebook)
-        self.puzzle_notebook.add(self.emoji_tab, text="Пазл с эмодзи")
+        self.puzzle_notebook.add(self.emoji_tab, text="Пазл с цифрами")
         self.puzzle_notebook.add(self.memory_tab, text="Найди пару")
 
         self._build_emoji_tab()
@@ -268,7 +265,7 @@ class MultimediaHub(tk.Tk):
         top = ttk.Frame(self.emoji_tab)
         top.pack(fill="x", padx=10, pady=10)
         ttk.Button(top, text="Новая игра", command=self.shuffle_emoji_puzzle).pack(side="left")
-        self.puzzle_status = tk.StringVar(value="Соберите эмодзи в правильный порядок")
+        self.puzzle_status = tk.StringVar(value="Соберите цифры в правильный порядок")
         ttk.Label(top, textvariable=self.puzzle_status).pack(side="left", padx=10)
 
         board = ttk.Frame(self.emoji_tab)
@@ -307,7 +304,7 @@ class MultimediaHub(tk.Tk):
             empty = self.board.index(0)
             move = random.choice(self._possible_moves(empty))
             self.board[empty], self.board[move] = self.board[move], self.board[empty]
-        self.puzzle_status.set("Соберите эмодзи в правильный порядок")
+        self.puzzle_status.set("Соберите цифры в правильный порядок")
         self._render_emoji_board()
 
     def _possible_moves(self, empty_idx: int) -> list[int]:
@@ -338,7 +335,7 @@ class MultimediaHub(tk.Tk):
             if value == 0:
                 btn.configure(text="", state="disabled", bg="#bdbdbd")
             else:
-                btn.configure(text=TILE_SYMBOLS[value - 1], state="normal", bg="#e8f1ff")
+                btn.configure(text=str(value), state="normal", bg="#e8f1ff")
 
     def _init_memory_puzzle(self) -> None:
         symbols = MEMORY_SYMBOLS * 2
