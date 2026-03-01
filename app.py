@@ -37,6 +37,8 @@ class MultimediaHub(tk.Tk):
         self.current_audio_path: Path | None = None
         self.current_video_path: Path | None = None
         self.current_image_path: Path | None = None
+        self.audio_index = -1
+        self.image_index = -1
         self.image_tk: ImageTk.PhotoImage | None = None
         self.vlc_ready = vlc is not None
 
@@ -81,8 +83,8 @@ class MultimediaHub(tk.Tk):
         palettes = {
             "Светлая": {"bg": "#eef2fb", "fg": "#1b1f2b", "accent": "#4a78d6", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f5f8ff", "select_bg": "#a7c0fb", "dark": False},
             "Тёмная": {"bg": "#1f2330", "fg": "#f2f5ff", "accent": "#5d9bff", "text_bg": "#151925", "list_bg": "#222736", "canvas_bg": "#0f1320", "select_bg": "#4d77d0", "dark": True},
-            "Фиолетовая": {"bg": "#f4edff", "fg": "#2b1d45", "accent": "#8b5cf6", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f7f1ff", "select_bg": "#c8a9ff", "dark": False},
-            "Зелёная": {"bg": "#ecf8f0", "fg": "#133122", "accent": "#2d9d62", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f2fff6", "select_bg": "#9eddb7", "dark": False},
+            "Фиолетовая": {"bg": "#f1eaff", "fg": "#2a184b", "accent": "#7c4dff", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f5f0ff", "select_bg": "#c6a8ff", "dark": False},
+            "Зелёная": {"bg": "#e8f7ef", "fg": "#143728", "accent": "#1f9d68", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f1fff7", "select_bg": "#9ddfbc", "dark": False},
         }
         return palettes.get(theme_name, palettes["Светлая"])
 
@@ -123,8 +125,8 @@ class MultimediaHub(tk.Tk):
             for text_widget in [self.prompt_text, self.answer_text]:
                 text_widget.configure(bg=text_bg, fg=text_fg, insertbackground=text_fg)
 
-        if hasattr(self, "audio_listbox"):
-            for lb in [self.audio_listbox, self.video_listbox, self.image_listbox]:
+        if hasattr(self, "video_listbox"):
+            for lb in [self.video_listbox]:
                 lb.configure(bg=list_bg, fg=text_fg, selectbackground=select_bg, relief="flat", activestyle="none")
 
         if hasattr(self, "image_canvas"):
@@ -180,9 +182,15 @@ class MultimediaHub(tk.Tk):
         self.video_files = self._scan_project_files(VIDEO_EXT)
         self.image_files = self._scan_project_files(IMAGE_EXT)
 
-        self._fill_listbox(self.audio_listbox, self.audio_files)
         self._fill_listbox(self.video_listbox, self.video_files)
-        self._fill_listbox(self.image_listbox, self.image_files)
+        self.audio_index = -1
+        self.image_index = -1
+
+        if hasattr(self, "music_label"):
+            self.music_label.set("Нажмите «Начать слушать музыку»")
+        if hasattr(self, "image_label"):
+            self.image_label.set("Нажмите «Начать смотреть картинки»")
+            self.image_canvas.delete("all")
 
     def _fill_listbox(self, listbox: tk.Listbox, files: list[Path]) -> None:
         listbox.delete(0, "end")
@@ -194,36 +202,56 @@ class MultimediaHub(tk.Tk):
         frame = ttk.LabelFrame(self.music_tab, text="Музыка")
         frame.pack(fill="both", expand=True, padx=12, pady=12)
 
-        left = ttk.Frame(frame)
-        left.pack(side="left", fill="both", expand=True, padx=10, pady=10)
+        controls = ttk.Frame(frame)
+        controls.pack(fill="x", padx=10, pady=10)
 
-        self.audio_listbox = tk.Listbox(left, height=20, font=("Segoe UI", 10), relief="flat")
-        self.audio_listbox.pack(fill="both", expand=True)
-        self.audio_listbox.bind("<<ListboxSelect>>", lambda _e: self.select_audio())
+        self.music_label = tk.StringVar(value="Нажмите «Начать слушать музыку»")
+        ttk.Label(controls, textvariable=self.music_label, wraplength=900).pack(anchor="w", pady=(0, 12))
 
-        right = ttk.Frame(frame)
-        right.pack(side="right", fill="y", padx=10, pady=10)
+        nav = ttk.Frame(controls)
+        nav.pack(fill="x")
+        ttk.Button(nav, text="Начать слушать музыку", style="Accent.TButton", command=self.start_music).pack(side="left", padx=(0, 6))
+        ttk.Button(nav, text="◀ Предыдущая", command=self.prev_music).pack(side="left", padx=3)
+        ttk.Button(nav, text="Следующая ▶", command=self.next_music).pack(side="left", padx=3)
 
-        self.music_label = tk.StringVar(value="Выберите аудио из списка")
-        ttk.Label(right, textvariable=self.music_label, wraplength=300).pack(anchor="w", pady=(0, 10))
-        ttk.Button(right, text="▶ Старт", style="Accent.TButton", command=self.play_media).pack(fill="x", pady=4)
-        ttk.Button(right, text="⏸ Пауза", command=self.pause_media).pack(fill="x", pady=4)
-        ttk.Button(right, text="⏹ Стоп", command=self.stop_media).pack(fill="x", pady=4)
+        play = ttk.Frame(controls)
+        play.pack(fill="x", pady=(12, 0))
+        ttk.Button(play, text="▶ Старт", style="Accent.TButton", command=self.play_media).pack(side="left", padx=(0, 6))
+        ttk.Button(play, text="⏸ Пауза", command=self.pause_media).pack(side="left", padx=3)
+        ttk.Button(play, text="⏹ Стоп", command=self.stop_media).pack(side="left", padx=3)
 
-        ttk.Label(right, text="Громкость").pack(anchor="w", pady=(14, 4))
-        self.volume_scale = ttk.Scale(right, from_=0, to=100, value=70, command=self.on_volume_change)
+        ttk.Label(controls, text="Громкость").pack(anchor="w", pady=(14, 4))
+        self.volume_scale = ttk.Scale(controls, from_=0, to=100, value=70, command=self.on_volume_change)
         self.volume_scale.pack(fill="x")
 
         if not self.vlc_ready:
             self.music_label.set("VLC/libVLC не найдены — музыка недоступна")
 
-    def select_audio(self) -> None:
-        idx = self._selected_index(self.audio_listbox)
-        if idx is None:
+    def _set_audio_by_index(self, idx: int) -> None:
+        if not self.audio_files:
+            self.music_label.set("Аудио файлы не найдены")
             return
-        self.current_audio_path = self.audio_files[idx]
+        self.audio_index = idx % len(self.audio_files)
+        self.current_audio_path = self.audio_files[self.audio_index]
         self.music_label.set(f"Аудио: {self.current_audio_path.name}")
         self._prepare_media_player(self.current_audio_path)
+
+    def start_music(self) -> None:
+        self._set_audio_by_index(0)
+
+    def next_music(self) -> None:
+        if not self.audio_files:
+            self.music_label.set("Аудио файлы не найдены")
+            return
+        start = 0 if self.audio_index < 0 else self.audio_index + 1
+        self._set_audio_by_index(start)
+
+    def prev_music(self) -> None:
+        if not self.audio_files:
+            self.music_label.set("Аудио файлы не найдены")
+            return
+        start = len(self.audio_files) - 1 if self.audio_index < 0 else self.audio_index - 1
+        self._set_audio_by_index(start)
 
     # ---------------------- VIDEO -------------------------------------
     def _build_video_tab(self) -> None:
@@ -252,28 +280,46 @@ class MultimediaHub(tk.Tk):
         frame = ttk.LabelFrame(self.image_tab, text="Картинки")
         frame.pack(fill="both", expand=True, padx=12, pady=12)
 
-        left = ttk.Frame(frame)
-        left.pack(side="left", fill="y", padx=10, pady=10)
-        self.image_listbox = tk.Listbox(left, width=42, font=("Segoe UI", 10), relief="flat")
-        self.image_listbox.pack(fill="y")
-        self.image_listbox.bind("<<ListboxSelect>>", lambda _e: self.select_image())
+        controls = ttk.Frame(frame)
+        controls.pack(fill="x", padx=10, pady=(10, 0))
+        self.image_label = tk.StringVar(value="Нажмите «Начать смотреть картинки»")
+        ttk.Label(controls, textvariable=self.image_label).pack(anchor="w")
 
-        right = ttk.Frame(frame)
-        right.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+        nav = ttk.Frame(controls)
+        nav.pack(fill="x", pady=(8, 4))
+        ttk.Button(nav, text="Начать смотреть картинки", style="Accent.TButton", command=self.start_images).pack(side="left", padx=(0, 6))
+        ttk.Button(nav, text="◀ Предыдущая", command=self.prev_image).pack(side="left", padx=3)
+        ttk.Button(nav, text="Следующая ▶", command=self.next_image).pack(side="left", padx=3)
 
-        self.image_label = tk.StringVar(value="Выберите изображение")
-        ttk.Label(right, textvariable=self.image_label).pack(anchor="w")
+        self.image_canvas = tk.Canvas(frame, bg="#f5f8ff", highlightthickness=0)
+        self.image_canvas.pack(fill="both", expand=True, padx=10, pady=(8, 10))
 
-        self.image_canvas = tk.Canvas(right, bg="#f5f8ff", highlightthickness=0)
-        self.image_canvas.pack(fill="both", expand=True, pady=(8, 0))
-
-    def select_image(self) -> None:
-        idx = self._selected_index(self.image_listbox)
-        if idx is None:
+    def _set_image_by_index(self, idx: int) -> None:
+        if not self.image_files:
+            self.image_label.set("Изображения не найдены")
+            self.image_canvas.delete("all")
             return
-        self.current_image_path = self.image_files[idx]
+        self.image_index = idx % len(self.image_files)
+        self.current_image_path = self.image_files[self.image_index]
         self.image_label.set(f"Картинка: {self.current_image_path.name}")
         self._show_image(self.current_image_path)
+
+    def start_images(self) -> None:
+        self._set_image_by_index(0)
+
+    def next_image(self) -> None:
+        if not self.image_files:
+            self.image_label.set("Изображения не найдены")
+            return
+        start = 0 if self.image_index < 0 else self.image_index + 1
+        self._set_image_by_index(start)
+
+    def prev_image(self) -> None:
+        if not self.image_files:
+            self.image_label.set("Изображения не найдены")
+            return
+        start = len(self.image_files) - 1 if self.image_index < 0 else self.image_index - 1
+        self._set_image_by_index(start)
 
     def _show_image(self, path: Path) -> None:
         img = Image.open(path)
@@ -285,7 +331,7 @@ class MultimediaHub(tk.Tk):
         self.image_canvas.create_image(w // 2, h // 2, image=self.image_tk)
 
     # ---------------------- WIN EFFECT --------------------------------
-    def _win_effect(self, title: str, text: str, widgets: list[tk.Widget] | None = None) -> None:
+    def _win_effect(self, _title: str, _text: str, widgets: list[tk.Widget] | None = None) -> None:
         targets = widgets or []
         colors = ["#d9ffd9", "#fff7c9"]
 
@@ -301,7 +347,6 @@ class MultimediaHub(tk.Tk):
             self.after(120, lambda: blink(step + 1))
 
         blink()
-        messagebox.showinfo(title, text)
 
     # ---------------------- PUZZLES -----------------------------------
     def _build_puzzle_tab(self) -> None:
@@ -473,7 +518,7 @@ class MultimediaHub(tk.Tk):
         top.pack(fill="x", padx=10, pady=10)
 
         ttk.Button(top, text="Новая игра", command=self._init_ttt_puzzle).pack(side="left")
-        self.ttt_status = tk.StringVar(value="Ход: X")
+        self.ttt_status = tk.StringVar(value="Нажмите «Новая игра»")
         ttk.Label(top, textvariable=self.ttt_status).pack(side="left", padx=10)
 
         board = ttk.Frame(self.ttt_tab)
@@ -495,11 +540,19 @@ class MultimediaHub(tk.Tk):
 
     def _init_ttt_puzzle(self) -> None:
         self.ttt_board = ["" for _ in range(9)]
-        self.ttt_current = self.ttt_human
+        self.ttt_human = random.choice(["X", "O"])
+        self.ttt_bot = "O" if self.ttt_human == "X" else "X"
+        self.ttt_current = "X"
         if hasattr(self, "ttt_status"):
-            self.ttt_status.set("Ваш ход: X")
+            self.ttt_status.set(f"Вы играете за {self.ttt_human}")
         for btn in self.ttt_buttons:
             btn.configure(text="", state="normal", bg="#f4f4f4")
+
+        if self.ttt_current == self.ttt_bot:
+            self.ttt_status.set(f"Вы играете за {self.ttt_human}. Ход бота...")
+            self.after(250, self._ttt_bot_move)
+        else:
+            self.ttt_status.set(f"Вы играете за {self.ttt_human}. Ваш ход")
 
     def ttt_click(self, idx: int) -> None:
         if self.ttt_board[idx] or self.ttt_current != self.ttt_human:
@@ -510,14 +563,14 @@ class MultimediaHub(tk.Tk):
 
         winner = self._ttt_winner()
         if winner:
-            self.ttt_status.set("Вы победили")
+            self.ttt_status.set("Победа! Нажмите «Новая игра»")
             for btn in self.ttt_buttons:
                 btn.configure(state="disabled")
             self._win_effect("Крестики-нолики", "Вы победили!", self.ttt_buttons)
             return
 
         if all(cell for cell in self.ttt_board):
-            self.ttt_status.set("Ничья")
+            self.ttt_status.set("Ничья. Нажмите «Новая игра»")
             self._win_effect("Крестики-нолики", "Ничья!", self.ttt_buttons)
             return
 
@@ -547,19 +600,19 @@ class MultimediaHub(tk.Tk):
 
         winner = self._ttt_winner()
         if winner:
-            self.ttt_status.set("Победил бот")
+            self.ttt_status.set("Поражение. Нажмите «Новая игра»")
             for btn in self.ttt_buttons:
                 btn.configure(state="disabled")
             self._win_effect("Крестики-нолики", "Бот победил!", self.ttt_buttons)
             return
 
         if all(cell for cell in self.ttt_board):
-            self.ttt_status.set("Ничья")
+            self.ttt_status.set("Ничья. Нажмите «Новая игра»")
             self._win_effect("Крестики-нолики", "Ничья!", self.ttt_buttons)
             return
 
         self.ttt_current = self.ttt_human
-        self.ttt_status.set("Ваш ход: X")
+        self.ttt_status.set(f"Ваш ход ({self.ttt_human})")
 
     def _ttt_find_winning_move(self, symbol: str) -> int | None:
         for idx, value in enumerate(self.ttt_board):
