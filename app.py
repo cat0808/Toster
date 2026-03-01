@@ -55,8 +55,10 @@ class MultimediaHub(tk.Tk):
         self.ttt_board = ["" for _ in range(9)]
         self.ttt_buttons: list[tk.Button] = []
         self.ttt_current = "X"
+        self.ttt_human = "X"
+        self.ttt_bot = "O"
 
-        self._create_styles(False)
+        self._apply_theme("Светлая")
         self._build_ui()
         self._init_number_puzzle()
         self._init_memory_puzzle()
@@ -75,10 +77,19 @@ class MultimediaHub(tk.Tk):
             )
 
     # -------------------------- STYLE ---------------------------------
-    def _create_styles(self, dark: bool) -> None:
-        bg = "#1f2330" if dark else "#eef2fb"
-        fg = "#f2f5ff" if dark else "#1b1f2b"
-        accent = "#5d9bff" if dark else "#4a78d6"
+    def _palette(self, theme_name: str) -> dict[str, str | bool]:
+        palettes = {
+            "Светлая": {"bg": "#eef2fb", "fg": "#1b1f2b", "accent": "#4a78d6", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f5f8ff", "select_bg": "#a7c0fb", "dark": False},
+            "Тёмная": {"bg": "#1f2330", "fg": "#f2f5ff", "accent": "#5d9bff", "text_bg": "#151925", "list_bg": "#222736", "canvas_bg": "#0f1320", "select_bg": "#4d77d0", "dark": True},
+            "Фиолетовая": {"bg": "#f4edff", "fg": "#2b1d45", "accent": "#8b5cf6", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f7f1ff", "select_bg": "#c8a9ff", "dark": False},
+            "Зелёная": {"bg": "#ecf8f0", "fg": "#133122", "accent": "#2d9d62", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f2fff6", "select_bg": "#9eddb7", "dark": False},
+        }
+        return palettes.get(theme_name, palettes["Светлая"])
+
+    def _create_styles(self, palette: dict[str, str | bool]) -> None:
+        bg = str(palette["bg"])
+        fg = str(palette["fg"])
+        accent = str(palette["accent"])
 
         self.configure(bg=bg)
         style = ttk.Style(self)
@@ -96,25 +107,31 @@ class MultimediaHub(tk.Tk):
         style.configure("TNotebook", background=bg)
         style.configure("TNotebook.Tab", padding=(16, 10), font=("Segoe UI", 10, "bold"))
 
-        self.dark_mode = dark
+        self.dark_mode = bool(palette["dark"])
+
+    def _apply_theme(self, theme_name: str) -> None:
+        palette = self._palette(theme_name)
+        self._create_styles(palette)
+
+        text_bg = str(palette["text_bg"])
+        text_fg = str(palette["fg"])
+        list_bg = str(palette["list_bg"])
+        select_bg = str(palette["select_bg"])
+        canvas_bg = str(palette["canvas_bg"])
+
+        if hasattr(self, "prompt_text") and hasattr(self, "answer_text"):
+            for text_widget in [self.prompt_text, self.answer_text]:
+                text_widget.configure(bg=text_bg, fg=text_fg, insertbackground=text_fg)
+
+        if hasattr(self, "audio_listbox"):
+            for lb in [self.audio_listbox, self.video_listbox, self.image_listbox]:
+                lb.configure(bg=list_bg, fg=text_fg, selectbackground=select_bg, relief="flat", activestyle="none")
+
+        if hasattr(self, "image_canvas"):
+            self.image_canvas.configure(bg=canvas_bg)
 
     def toggle_theme(self) -> None:
-        dark = self.theme_var.get() == "Тёмная"
-        self._create_styles(dark)
-
-        text_bg = "#151925" if dark else "#ffffff"
-        text_fg = "#eef2ff" if dark else "#1b1f2b"
-        list_bg = "#222736" if dark else "#ffffff"
-        select_bg = "#4d77d0" if dark else "#a7c0fb"
-        canvas_bg = "#0f1320" if dark else "#f5f8ff"
-
-        for text_widget in [self.prompt_text, self.answer_text]:
-            text_widget.configure(bg=text_bg, fg=text_fg, insertbackground=text_fg)
-
-        for lb in [self.audio_listbox, self.video_listbox, self.image_listbox]:
-            lb.configure(bg=list_bg, fg=text_fg, selectbackground=select_bg, relief="flat", activestyle="none")
-
-        self.image_canvas.configure(bg=canvas_bg)
+        self._apply_theme(self.theme_var.get())
 
     # ---------------------------- UI ----------------------------------
     def _build_ui(self) -> None:
@@ -124,7 +141,7 @@ class MultimediaHub(tk.Tk):
         ttk.Label(top, text="Multimedia Hub", style="Header.TLabel").pack(side="left")
         ttk.Label(top, text="Тема:").pack(side="right", padx=(8, 4))
 
-        theme_combo = ttk.Combobox(top, textvariable=self.theme_var, state="readonly", values=["Светлая", "Тёмная"], width=11)
+        theme_combo = ttk.Combobox(top, textvariable=self.theme_var, state="readonly", values=["Светлая", "Тёмная", "Фиолетовая", "Зелёная"], width=13)
         theme_combo.pack(side="right")
         theme_combo.bind("<<ComboboxSelected>>", lambda _e: self.toggle_theme())
 
@@ -148,6 +165,7 @@ class MultimediaHub(tk.Tk):
         self._build_image_tab()
         self._build_puzzle_tab()
         self._build_ai_tab()
+        self._apply_theme(self.theme_var.get())
 
     # ---------------------- FILES -------------------------------------
     def _scan_project_files(self, exts: set[str]) -> list[Path]:
@@ -477,14 +495,14 @@ class MultimediaHub(tk.Tk):
 
     def _init_ttt_puzzle(self) -> None:
         self.ttt_board = ["" for _ in range(9)]
-        self.ttt_current = "X"
+        self.ttt_current = self.ttt_human
         if hasattr(self, "ttt_status"):
-            self.ttt_status.set("Ход: X")
+            self.ttt_status.set("Ваш ход: X")
         for btn in self.ttt_buttons:
             btn.configure(text="", state="normal", bg="#f4f4f4")
 
     def ttt_click(self, idx: int) -> None:
-        if self.ttt_board[idx]:
+        if self.ttt_board[idx] or self.ttt_current != self.ttt_human:
             return
 
         self.ttt_board[idx] = self.ttt_current
@@ -492,10 +510,10 @@ class MultimediaHub(tk.Tk):
 
         winner = self._ttt_winner()
         if winner:
-            self.ttt_status.set(f"Победил: {winner}")
+            self.ttt_status.set("Вы победили")
             for btn in self.ttt_buttons:
                 btn.configure(state="disabled")
-            self._win_effect("Крестики-нолики", f"Победа игрока {winner}!", self.ttt_buttons)
+            self._win_effect("Крестики-нолики", "Вы победили!", self.ttt_buttons)
             return
 
         if all(cell for cell in self.ttt_board):
@@ -503,8 +521,56 @@ class MultimediaHub(tk.Tk):
             self._win_effect("Крестики-нолики", "Ничья!", self.ttt_buttons)
             return
 
-        self.ttt_current = "O" if self.ttt_current == "X" else "X"
-        self.ttt_status.set(f"Ход: {self.ttt_current}")
+        self.ttt_current = self.ttt_bot
+        self.ttt_status.set("Ход бота...")
+        self.after(250, self._ttt_bot_move)
+
+    def _ttt_bot_move(self) -> None:
+        if self._ttt_winner() or all(self.ttt_board):
+            return
+
+        best_idx = self._ttt_find_winning_move(self.ttt_bot)
+        if best_idx is None:
+            best_idx = self._ttt_find_winning_move(self.ttt_human)
+        if best_idx is None and self.ttt_board[4] == "":
+            best_idx = 4
+        if best_idx is None:
+            corners = [i for i in [0, 2, 6, 8] if self.ttt_board[i] == ""]
+            if corners:
+                best_idx = random.choice(corners)
+        if best_idx is None:
+            free = [i for i, value in enumerate(self.ttt_board) if value == ""]
+            best_idx = random.choice(free)
+
+        self.ttt_board[best_idx] = self.ttt_bot
+        self.ttt_buttons[best_idx].configure(text=self.ttt_bot)
+
+        winner = self._ttt_winner()
+        if winner:
+            self.ttt_status.set("Победил бот")
+            for btn in self.ttt_buttons:
+                btn.configure(state="disabled")
+            self._win_effect("Крестики-нолики", "Бот победил!", self.ttt_buttons)
+            return
+
+        if all(cell for cell in self.ttt_board):
+            self.ttt_status.set("Ничья")
+            self._win_effect("Крестики-нолики", "Ничья!", self.ttt_buttons)
+            return
+
+        self.ttt_current = self.ttt_human
+        self.ttt_status.set("Ваш ход: X")
+
+    def _ttt_find_winning_move(self, symbol: str) -> int | None:
+        for idx, value in enumerate(self.ttt_board):
+            if value:
+                continue
+            self.ttt_board[idx] = symbol
+            if self._ttt_winner() == symbol:
+                self.ttt_board[idx] = ""
+                return idx
+            self.ttt_board[idx] = ""
+        return None
 
     def _ttt_winner(self) -> str | None:
         lines = [
@@ -523,8 +589,7 @@ class MultimediaHub(tk.Tk):
         frame.pack(fill="both", expand=True, padx=12, pady=12)
 
         subtitle = (
-            "Введите запрос и получите ответ от ИИ. "
-            "Параметры доступа берутся из переменных окружения GIGACHAT_CLIENT_ID/GIGACHAT_CLIENT_SECRET."
+            "Введите запрос и получите ответ от ИИ."
         )
         ttk.Label(frame, text=subtitle, wraplength=980).pack(anchor="w", padx=12, pady=(10, 8))
 
