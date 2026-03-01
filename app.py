@@ -29,7 +29,7 @@ MEMORY_SYMBOLS = ["🍎", "🍌", "🍇", "🍒", "🍉", "🥝", "🍍", "🍓"
 class MultimediaHub(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title("Multimedia Hub")
+        self.title("Мультимедиа")
         self.geometry("1240x860")
         self.minsize(1060, 740)
 
@@ -83,8 +83,10 @@ class MultimediaHub(tk.Tk):
         palettes = {
             "Светлая": {"bg": "#eef2fb", "fg": "#1b1f2b", "accent": "#4a78d6", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f5f8ff", "select_bg": "#a7c0fb", "dark": False},
             "Тёмная": {"bg": "#1f2330", "fg": "#f2f5ff", "accent": "#5d9bff", "text_bg": "#151925", "list_bg": "#222736", "canvas_bg": "#0f1320", "select_bg": "#4d77d0", "dark": True},
-            "Фиолетовая": {"bg": "#f1eaff", "fg": "#2a184b", "accent": "#7c4dff", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f5f0ff", "select_bg": "#c6a8ff", "dark": False},
-            "Зелёная": {"bg": "#e8f7ef", "fg": "#143728", "accent": "#1f9d68", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f1fff7", "select_bg": "#9ddfbc", "dark": False},
+            "Фиолетовая": {"bg": "#efe5ff", "fg": "#2a1748", "accent": "#7a46f2", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f5edff", "select_bg": "#c7a7ff", "dark": False},
+            "Зелёная": {"bg": "#e7f7ee", "fg": "#123624", "accent": "#1f9a64", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#effff6", "select_bg": "#9edfb9", "dark": False},
+            "Оранжевая": {"bg": "#fff2e6", "fg": "#4a2913", "accent": "#e97833", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#fff8f2", "select_bg": "#ffc99f", "dark": False},
+            "Бирюзовая": {"bg": "#e8fbfb", "fg": "#113b3d", "accent": "#1aa3a8", "text_bg": "#ffffff", "list_bg": "#ffffff", "canvas_bg": "#f2ffff", "select_bg": "#9de5e7", "dark": False},
         }
         return palettes.get(theme_name, palettes["Светлая"])
 
@@ -140,10 +142,10 @@ class MultimediaHub(tk.Tk):
         top = ttk.Frame(self)
         top.pack(fill="x", padx=14, pady=(12, 8))
 
-        ttk.Label(top, text="Multimedia Hub", style="Header.TLabel").pack(side="left")
+        ttk.Label(top, text="", style="Header.TLabel").pack(side="left")
         ttk.Label(top, text="Тема:").pack(side="right", padx=(8, 4))
 
-        theme_combo = ttk.Combobox(top, textvariable=self.theme_var, state="readonly", values=["Светлая", "Тёмная", "Фиолетовая", "Зелёная"], width=13)
+        theme_combo = ttk.Combobox(top, textvariable=self.theme_var, state="readonly", values=["Светлая", "Тёмная", "Фиолетовая", "Зелёная", "Оранжевая", "Бирюзовая"], width=13)
         theme_combo.pack(side="right")
         theme_combo.bind("<<ComboboxSelected>>", lambda _e: self.toggle_theme())
 
@@ -353,8 +355,15 @@ class MultimediaHub(tk.Tk):
         container = ttk.Frame(self.puzzle_tab)
         container.pack(fill="both", expand=True, padx=12, pady=12)
 
+        toolbar = ttk.Frame(container)
+        toolbar.pack(fill="x", pady=(0, 8))
+        ttk.Button(toolbar, text="Новая игра", style="Accent.TButton", command=self.reset_current_puzzle).pack(side="left")
+        self.global_puzzle_status = tk.StringVar(value="Выберите игру и нажмите «Новая игра»")
+        ttk.Label(toolbar, textvariable=self.global_puzzle_status).pack(side="left", padx=10)
+
         self.puzzle_notebook = ttk.Notebook(container)
         self.puzzle_notebook.pack(fill="both", expand=True)
+        self.puzzle_notebook.bind("<<NotebookTabChanged>>", lambda _e: self._on_puzzle_tab_change())
 
         self.number_tab = ttk.Frame(self.puzzle_notebook)
         self.memory_tab = ttk.Frame(self.puzzle_notebook)
@@ -372,7 +381,6 @@ class MultimediaHub(tk.Tk):
         top = ttk.Frame(self.number_tab)
         top.pack(fill="x", padx=10, pady=10)
 
-        ttk.Button(top, text="Новая игра", command=self.shuffle_number_puzzle).pack(side="left")
         self.puzzle_status = tk.StringVar(value="Соберите цифры в правильный порядок")
         ttk.Label(top, textvariable=self.puzzle_status).pack(side="left", padx=10)
 
@@ -428,6 +436,7 @@ class MultimediaHub(tk.Tk):
 
         if self.board == list(range(1, 16)) + [0]:
             self.puzzle_status.set("Победа! 🎉")
+            self.global_puzzle_status.set("Пятнашки: победа! Нажмите «Новая игра»")
             self._win_effect("Пятнашки", "Вы собрали пазл!", self.board_buttons)
 
     def _render_number_board(self) -> None:
@@ -443,7 +452,6 @@ class MultimediaHub(tk.Tk):
         top = ttk.Frame(self.memory_tab)
         top.pack(fill="x", padx=10, pady=10)
 
-        ttk.Button(top, text="Новая игра", command=self._init_memory_puzzle).pack(side="left")
         self.memory_status = tk.StringVar(value="Открывайте карточки и ищите пары")
         ttk.Label(top, textvariable=self.memory_status).pack(side="left", padx=10)
 
@@ -510,6 +518,7 @@ class MultimediaHub(tk.Tk):
 
         if all(btn.cget("state") == "disabled" for btn in self.memory_buttons):
             self.memory_status.set("Победа! 🎉")
+            self.global_puzzle_status.set("Найди пару: победа! Нажмите «Новая игра»")
             self._win_effect("Найди пару", "Все пары собраны!", self.memory_buttons)
 
     # tic-tac-toe
@@ -517,8 +526,7 @@ class MultimediaHub(tk.Tk):
         top = ttk.Frame(self.ttt_tab)
         top.pack(fill="x", padx=10, pady=10)
 
-        ttk.Button(top, text="Новая игра", command=self._init_ttt_puzzle).pack(side="left")
-        self.ttt_status = tk.StringVar(value="Нажмите «Новая игра»")
+        self.ttt_status = tk.StringVar(value="Выберите игру и нажмите «Новая игра»")
         ttk.Label(top, textvariable=self.ttt_status).pack(side="left", padx=10)
 
         board = ttk.Frame(self.ttt_tab)
@@ -550,9 +558,11 @@ class MultimediaHub(tk.Tk):
 
         if self.ttt_current == self.ttt_bot:
             self.ttt_status.set(f"Вы играете за {self.ttt_human}. Ход бота...")
+            self.global_puzzle_status.set("Крестики-нолики: новая игра")
             self.after(250, self._ttt_bot_move)
         else:
             self.ttt_status.set(f"Вы играете за {self.ttt_human}. Ваш ход")
+            self.global_puzzle_status.set("Крестики-нолики: новая игра")
 
     def ttt_click(self, idx: int) -> None:
         if self.ttt_board[idx] or self.ttt_current != self.ttt_human:
@@ -564,6 +574,7 @@ class MultimediaHub(tk.Tk):
         winner = self._ttt_winner()
         if winner:
             self.ttt_status.set("Победа! Нажмите «Новая игра»")
+            self.global_puzzle_status.set("Крестики-нолики: победа")
             for btn in self.ttt_buttons:
                 btn.configure(state="disabled")
             self._win_effect("Крестики-нолики", "Вы победили!", self.ttt_buttons)
@@ -571,6 +582,7 @@ class MultimediaHub(tk.Tk):
 
         if all(cell for cell in self.ttt_board):
             self.ttt_status.set("Ничья. Нажмите «Новая игра»")
+            self.global_puzzle_status.set("Крестики-нолики: ничья")
             self._win_effect("Крестики-нолики", "Ничья!", self.ttt_buttons)
             return
 
@@ -601,6 +613,7 @@ class MultimediaHub(tk.Tk):
         winner = self._ttt_winner()
         if winner:
             self.ttt_status.set("Поражение. Нажмите «Новая игра»")
+            self.global_puzzle_status.set("Крестики-нолики: поражение")
             for btn in self.ttt_buttons:
                 btn.configure(state="disabled")
             self._win_effect("Крестики-нолики", "Бот победил!", self.ttt_buttons)
@@ -608,6 +621,7 @@ class MultimediaHub(tk.Tk):
 
         if all(cell for cell in self.ttt_board):
             self.ttt_status.set("Ничья. Нажмите «Новая игра»")
+            self.global_puzzle_status.set("Крестики-нолики: ничья")
             self._win_effect("Крестики-нолики", "Ничья!", self.ttt_buttons)
             return
 
@@ -635,6 +649,22 @@ class MultimediaHub(tk.Tk):
             if self.ttt_board[a] and self.ttt_board[a] == self.ttt_board[b] == self.ttt_board[c]:
                 return self.ttt_board[a]
         return None
+
+    def _on_puzzle_tab_change(self) -> None:
+        tab_text = self.puzzle_notebook.tab(self.puzzle_notebook.select(), "text")
+        self.global_puzzle_status.set(f"Выбрана игра: {tab_text}")
+
+    def reset_current_puzzle(self) -> None:
+        tab_text = self.puzzle_notebook.tab(self.puzzle_notebook.select(), "text")
+        if tab_text == "Пятнашки":
+            self.shuffle_number_puzzle()
+            self.global_puzzle_status.set("Пятнашки: новая игра")
+        elif tab_text == "Найди пару":
+            self._init_memory_puzzle()
+            self.global_puzzle_status.set("Найди пару: новая игра")
+        else:
+            self._init_ttt_puzzle()
+
 
     # ---------------------- AI ----------------------------------------
     def _build_ai_tab(self) -> None:

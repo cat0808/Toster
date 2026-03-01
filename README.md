@@ -1,4 +1,4 @@
-# Multimedia Hub (Python + Tkinter)
+# Мультимедиа приложение (Python + Tkinter)
 
 Приложение с UI, которое умеет:
 
