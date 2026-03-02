@@ -64,7 +64,7 @@ let ttt=Array(9).fill(''), human='X', bot='O', cur='X';
 const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 function winner(){for(const [a,b,c] of lines) if(ttt[a]&&ttt[a]===ttt[b]&&ttt[a]===ttt[c]) return ttt[a]; return null;}
 function renderTtt(){bTtt.innerHTML='';ttt.forEach((v,i)=>{const bt=document.createElement('button');bt.textContent=v;bt.onclick=()=>{if(ttt[i]||cur!==human)return;ttt[i]=human;cur=bot;renderTtt();const w=winner();if(w){status.textContent='Крестики-нолики: победа. Нажмите «Новая игра»';return;}if(ttt.every(Boolean)){status.textContent='Крестики-нолики: ничья. Нажмите «Новая игра»';return;}setTimeout(botMove,250)};bTtt.appendChild(bt)});}
-function botMove(){const free=ttt.map((v,i)=>v?null:i).filter(x=>x!==null);if(!free.length)return;ttt[free[Math.floor(Math.random()*free.length)]]=bot;cur=human;renderTtt();const w=winner();if(w){status.textContent='Крестики-нолики: поражение. Нажмите «Новая игра"';return;}if(ttt.every(Boolean))status.textContent='Крестики-нолики: ничья. Нажмите «Новая игра»';}
+function botMove(){const free=ttt.map((v,i)=>v?null:i).filter(x=>x!==null);if(!free.length)return;ttt[free[Math.floor(Math.random()*free.length)]]=bot;cur=human;renderTtt();const w=winner();if(w){status.textContent='Крестики-нолики: поражение. Нажмите «Новая игра»';return;}if(ttt.every(Boolean))status.textContent='Крестики-нолики: ничья. Нажмите «Новая игра»';}
 function newTtt(){human=Math.random()<.5?'X':'O';bot=human==='X'?'O':'X';ttt=Array(9).fill('');cur='X';renderTtt();status.textContent=`Крестики-нолики: новая игра (вы ${human})`;if(cur===bot)setTimeout(botMove,250)}
 
 document.getElementById('newPuzzle').onclick=()=>{ if(pz==='15') new15(); else if(pz==='mem') newMem(); else newTtt(); };

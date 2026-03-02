@@ -3,7 +3,6 @@ import json
 import os
 from pathlib import Path
 
-import requests
 from flask import Flask, jsonify, render_template, request, send_from_directory
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -31,6 +30,8 @@ def rel_list(paths: list[Path]) -> list[str]:
 
 
 def gigachat_token() -> str:
+    import requests
+
     if not GIGACHAT_CLIENT_ID or not GIGACHAT_CLIENT_SECRET:
         raise ValueError("Set GIGACHAT_CLIENT_ID and GIGACHAT_CLIENT_SECRET")
 
@@ -51,6 +52,8 @@ def gigachat_token() -> str:
 
 
 def gigachat_chat(token: str, prompt: str) -> str:
+    import requests
+
     response = requests.post(
         "https://gigachat.devices.sberbank.ru/api/v1/chat/completions",
         headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
