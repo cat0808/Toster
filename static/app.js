@@ -59,44 +59,49 @@ const boards = {
   math: document.getElementById('boardMath'),
   reaction: document.getElementById('boardReaction')
 };
+const size15Controls = document.getElementById('size15Controls');
+const sizeMemControls = document.getElementById('sizeMemControls');
 let pz='15';
 pzBtns.forEach(b=>b.onclick=()=>{
   pzBtns.forEach(x=>x.classList.remove('active')); b.classList.add('active'); pz=b.dataset.pz;
   Object.entries(boards).forEach(([k,v])=>v.classList.toggle('hidden',k!==pz));
+  size15Controls.classList.toggle('hidden', pz!=='15');
+  sizeMemControls.classList.toggle('hidden', pz!=='mem');
   status.textContent='Выбрана игра: '+b.textContent;
 });
 
 // 15 puzzle
 let board=[];
-function moves(e){const r=Math.floor(e/4),c=e%4,m=[];if(r>0)m.push(e-4);if(r<3)m.push(e+4);if(c>0)m.push(e-1);if(c<3)m.push(e+1);return m}
-function render15(){boards['15'].innerHTML='';board.forEach((v,idx)=>{const bt=document.createElement('button');bt.textContent=v||'';bt.disabled=v===0;bt.onclick=()=>{const e=board.indexOf(0);if(!moves(e).includes(idx))return;[board[e],board[idx]]=[board[idx],board[e]];render15();if(board.every((x,i)=>x===((i+1)%16))){status.textContent='Пятнашки: победа. Нажмите «Новая игра»';}};boards['15'].appendChild(bt)})}
-function new15(){board=[...Array(15).keys()].map(x=>x+1).concat(0);for(let k=0;k<200;k++){const e=board.indexOf(0);const m=moves(e);const c=m[Math.floor(Math.random()*m.length)];[board[e],board[c]]=[board[c],board[e]]}render15();status.textContent='Пятнашки: новая игра';}
+let size15=4;
+const size15Btns={
+  3: document.getElementById('size15_3'),
+  4: document.getElementById('size15_4'),
+  5: document.getElementById('size15_5')
+};
+function moves(e){const r=Math.floor(e/size15),c=e%size15,m=[];if(r>0)m.push(e-size15);if(r<size15-1)m.push(e+size15);if(c>0)m.push(e-1);if(c<size15-1)m.push(e+1);return m}
+function refresh15Classes(){
+  boards['15'].classList.toggle('size-3', size15===3);
+  boards['15'].classList.toggle('size-4', size15===4);
+  boards['15'].classList.toggle('size-5', size15===5);
+  Object.entries(size15Btns).forEach(([k,btn])=>btn.classList.toggle('active', Number(k)===size15));
+}
+function render15(){boards['15'].innerHTML='';board.forEach((v,idx)=>{const bt=document.createElement('button');bt.textContent=v||'';bt.disabled=v===0;bt.onclick=()=>{const e=board.indexOf(0);if(!moves(e).includes(idx))return;[board[e],board[idx]]=[board[idx],board[e]];render15();if(board.every((x,i)=>x===((i+1)%(size15*size15)))){status.textContent='Пятнашки: победа. Нажмите «Новая игра»';}};boards['15'].appendChild(bt)})}
+function new15(){const total=size15*size15;board=[...Array(total-1).keys()].map(x=>x+1).concat(0);for(let k=0;k<200+size15*70;k++){const e=board.indexOf(0);const m=moves(e);const c=m[Math.floor(Math.random()*m.length)];[board[e],board[c]]=[board[c],board[e]]}refresh15Classes();render15();status.textContent=`Пятнашки: новая игра (${size15}×${size15})`;}
+Object.entries(size15Btns).forEach(([k,btn])=>btn.onclick=()=>{size15=Number(k);new15();});
 
 // Memory with size selector
 let mem=[],open=[];
 let memSize = 4; // 4x4 (8 pairs) or 6x6 (18 pairs)
-
-function ensureMemoryControls(){
-  if(document.getElementById('memSize4')) return;
-  const row = document.createElement('div');
-  row.className = 'row';
-  row.innerHTML = '<button id="memSize4">Поле 4×4</button><button id="memSize6">Поле 6×6</button>';
-  boards.mem.parentElement.insertBefore(row, boards.mem);
-
-  const b4 = document.getElementById('memSize4');
-  const b6 = document.getElementById('memSize6');
-
-  const refresh = () => {
-    b4.classList.toggle('active', memSize===4);
-    b6.classList.toggle('active', memSize===6);
-    boards.mem.classList.toggle('size-4', memSize===4);
-    boards.mem.classList.toggle('size-6', memSize===6);
-  };
-
-  b4.onclick = () => { memSize = 4; refresh(); newMem(); };
-  b6.onclick = () => { memSize = 6; refresh(); newMem(); };
-  refresh();
+const mem4Btn = document.getElementById('memSize4');
+const mem6Btn = document.getElementById('memSize6');
+function refreshMemClasses(){
+  mem4Btn.classList.toggle('active', memSize===4);
+  mem6Btn.classList.toggle('active', memSize===6);
+  boards.mem.classList.toggle('size-4', memSize===4);
+  boards.mem.classList.toggle('size-6', memSize===6);
 }
+mem4Btn.onclick=()=>{memSize=4;newMem();};
+mem6Btn.onclick=()=>{memSize=6;newMem();};
 
 function renderMem(){
   boards.mem.innerHTML='';
@@ -125,6 +130,7 @@ function newMem(){
   const chosen = symbols.slice(0, pairs);
   mem=[...chosen,...chosen].sort(()=>Math.random()-0.5).map(v=>({val:v,done:false}));
   open=[];
+  refreshMemClasses();
   renderMem();
   status.textContent=`Найди пару: новая игра (${memSize}×${memSize})`;
 }
@@ -263,7 +269,6 @@ document.getElementById('newPuzzle').onclick=()=>{
   else reactionPause();
 };
 
-ensureMemoryControls();
 new15();
 newMem();
 newTtt();
