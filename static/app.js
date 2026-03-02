@@ -6,8 +6,7 @@ for (const t of tabs) t.onclick = () => {
   tabs.forEach(b => b.classList.remove('active'));
   sections.forEach(s => s.classList.remove('active'));
   t.classList.add('active');
-  const sec = document.getElementById(t.dataset.tab);
-  sec.classList.add('active');
+  document.getElementById(t.dataset.tab).classList.add('active');
 };
 
 const themes = {
@@ -21,6 +20,7 @@ const themes = {
   'Графит':['#22252c','#f1f3f8','#2b303a','#7c8aa5','#69778f','#404756','#1f232b','#252b35','#343b49'],
   'Лимонная':['#fffde8','#3b3a12','#ffffff','#b3a700','#8f8500','#e9e28f','#ffffff','#fffef2','#ffffff']
 };
+
 document.getElementById('themeSelect').onchange = e => {
   const [bg,fg,card,acc,acc2,border,inputBg,mutedBg,btnBg]=themes[e.target.value];
   document.documentElement.style.setProperty('--bg',bg);
@@ -66,15 +66,70 @@ pzBtns.forEach(b=>b.onclick=()=>{
   status.textContent='Выбрана игра: '+b.textContent;
 });
 
+// 15 puzzle
 let board=[];
 function moves(e){const r=Math.floor(e/4),c=e%4,m=[];if(r>0)m.push(e-4);if(r<3)m.push(e+4);if(c>0)m.push(e-1);if(c<3)m.push(e+1);return m}
 function render15(){boards['15'].innerHTML='';board.forEach((v,idx)=>{const bt=document.createElement('button');bt.textContent=v||'';bt.disabled=v===0;bt.onclick=()=>{const e=board.indexOf(0);if(!moves(e).includes(idx))return;[board[e],board[idx]]=[board[idx],board[e]];render15();if(board.every((x,i)=>x===((i+1)%16))){status.textContent='Пятнашки: победа. Нажмите «Новая игра»';}};boards['15'].appendChild(bt)})}
 function new15(){board=[...Array(15).keys()].map(x=>x+1).concat(0);for(let k=0;k<200;k++){const e=board.indexOf(0);const m=moves(e);const c=m[Math.floor(Math.random()*m.length)];[board[e],board[c]]=[board[c],board[e]]}render15();status.textContent='Пятнашки: новая игра';}
 
+// Memory with size selector
 let mem=[],open=[];
-function renderMem(){boards.mem.innerHTML='';mem.forEach((v,i)=>{const bt=document.createElement('button');bt.textContent=open.includes(i)||v.done?v.val:'❓';bt.disabled=v.done;bt.onclick=()=>{if(open.includes(i)||v.done||open.length===2)return;open.push(i);renderMem();if(open.length===2){const [a,b]=open;if(mem[a].val===mem[b].val){mem[a].done=mem[b].done=true;open=[];renderMem();if(mem.every(x=>x.done))status.textContent='Найди пару: победа. Нажмите «Новая игра»';}else setTimeout(()=>{open=[];renderMem()},350)}};boards.mem.appendChild(bt)});}
-function newMem(){const s=['🍎','🍌','🍇','🍒','🍉','🥝','🍍','🍓'];mem=[...s,...s].sort(()=>Math.random()-0.5).map(v=>({val:v,done:false}));open=[];renderMem();status.textContent='Найди пару: новая игра';}
+let memSize = 4; // 4x4 (8 pairs) or 6x6 (18 pairs)
 
+function ensureMemoryControls(){
+  if(document.getElementById('memSize4')) return;
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = '<button id="memSize4">Поле 4×4</button><button id="memSize6">Поле 6×6</button>';
+  boards.mem.parentElement.insertBefore(row, boards.mem);
+
+  const b4 = document.getElementById('memSize4');
+  const b6 = document.getElementById('memSize6');
+
+  const refresh = () => {
+    b4.classList.toggle('active', memSize===4);
+    b6.classList.toggle('active', memSize===6);
+    boards.mem.classList.toggle('size-4', memSize===4);
+    boards.mem.classList.toggle('size-6', memSize===6);
+  };
+
+  b4.onclick = () => { memSize = 4; refresh(); newMem(); };
+  b6.onclick = () => { memSize = 6; refresh(); newMem(); };
+  refresh();
+}
+
+function renderMem(){
+  boards.mem.innerHTML='';
+  mem.forEach((v,i)=>{
+    const bt=document.createElement('button');
+    bt.textContent=open.includes(i)||v.done?v.val:'❓';
+    bt.disabled=v.done;
+    bt.onclick=()=>{
+      if(open.includes(i)||v.done||open.length===2) return;
+      open.push(i); renderMem();
+      if(open.length===2){
+        const [a,b]=open;
+        if(mem[a].val===mem[b].val){
+          mem[a].done=mem[b].done=true;
+          open=[]; renderMem();
+          if(mem.every(x=>x.done)) status.textContent='Найди пару: победа. Нажмите «Новая игра»';
+        } else setTimeout(()=>{open=[]; renderMem();},350);
+      }
+    };
+    boards.mem.appendChild(bt);
+  });
+}
+function newMem(){
+  const symbols = ['🍎','🍌','🍇','🍒','🍉','🥝','🍍','🍓','🍋','🥥','🍑','🍐','🥕','🌽','🍅','🍄','🍪','🍩'];
+  const pairs = memSize===4 ? 8 : 18;
+  const chosen = symbols.slice(0, pairs);
+  mem=[...chosen,...chosen].sort(()=>Math.random()-0.5).map(v=>({val:v,done:false}));
+  open=[];
+  renderMem();
+  status.textContent=`Найди пару: новая игра (${memSize}×${memSize})`;
+}
+
+// Tic-tac-toe
 let ttt=Array(9).fill(''), human='X', bot='O', cur='X';
 const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 function winner(){for(const [a,b,c] of lines) if(ttt[a]&&ttt[a]===ttt[b]&&ttt[a]===ttt[c]) return ttt[a]; return null;}
@@ -82,91 +137,138 @@ function renderTtt(){boards.ttt.innerHTML='';ttt.forEach((v,i)=>{const bt=docume
 function botMove(){const free=ttt.map((v,i)=>v?null:i).filter(x=>x!==null);if(!free.length)return;ttt[free[Math.floor(Math.random()*free.length)]]=bot;cur=human;renderTtt();const w=winner();if(w){status.textContent='Крестики-нолики: поражение. Нажмите «Новая игра»';return;}if(ttt.every(Boolean))status.textContent='Крестики-нолики: ничья. Нажмите «Новая игра»';}
 function newTtt(){human=Math.random()<.5?'X':'O';bot=human==='X'?'O':'X';ttt=Array(9).fill('');cur='X';renderTtt();status.textContent=`Крестики-нолики: новая игра (вы ${human})`;if(cur===bot)setTimeout(botMove,250)}
 
+// Improved Math puzzle
 let mathA=0, mathB=0, mathOp='+', mathLevel='easy', mathStreak=0, mathScore=0;
 const mathQuestionEl = document.getElementById('mathQuestion');
 const mathInputEl = document.getElementById('mathInput');
 const mathStatsEl = document.getElementById('mathStats');
+const lvlBtns = {
+  easy: document.getElementById('mathEasy'),
+  medium: document.getElementById('mathMedium'),
+  hard: document.getElementById('mathHard')
+};
 
-function pickByLevel(level){
-  if(level==='easy') return [1,20];
-  if(level==='medium') return [10,80];
-  return [20,150];
+function setLevelHighlight(){
+  Object.entries(lvlBtns).forEach(([lvl,btn]) => btn.classList.toggle('active', lvl===mathLevel));
 }
-
-function updateMathStats(){
-  mathStatsEl.textContent = `Серия: ${mathStreak} | Очки: ${mathScore} | Уровень: ${mathLevel}`;
-}
-
-function calcAnswer(){
-  if(mathOp==='+') return mathA + mathB;
-  if(mathOp==='-') return mathA - mathB;
-  if(mathOp==='×') return mathA * mathB;
-  return Math.floor(mathA / mathB);
-}
+function pickByLevel(level){ if(level==='easy') return [1,20]; if(level==='medium') return [10,80]; return [20,150]; }
+function updateMathStats(){ mathStatsEl.textContent = `Серия: ${mathStreak} | Очки: ${mathScore} | Уровень: ${mathLevel}`; }
+function calcAnswer(){ if(mathOp==='+') return mathA+mathB; if(mathOp==='-') return mathA-mathB; if(mathOp==='×') return mathA*mathB; return Math.floor(mathA/mathB); }
 
 function newMath(){
   const [min,max] = pickByLevel(mathLevel);
   mathA = Math.floor(Math.random()*(max-min+1))+min;
   mathB = Math.floor(Math.random()*(max-min+1))+min;
-
   const ops = mathLevel==='easy' ? ['+','-'] : (mathLevel==='medium' ? ['+','-','×'] : ['+','-','×','÷']);
   mathOp = ops[Math.floor(Math.random()*ops.length)];
-
-  if(mathOp==='÷'){
-    mathB = Math.max(2, Math.floor(Math.random()*12)+2);
-    const q = Math.max(2, Math.floor(Math.random()*12)+2);
-    mathA = mathB * q;
-  }
-
+  if(mathOp==='÷'){ mathB = Math.max(2, Math.floor(Math.random()*12)+2); const q = Math.max(2, Math.floor(Math.random()*12)+2); mathA = mathB*q; }
   mathQuestionEl.textContent = `Сколько будет ${mathA} ${mathOp} ${mathB}?`;
   mathInputEl.value='';
   updateMathStats();
+  setLevelHighlight();
   status.textContent='Математика: новая задача';
 }
 
-function setMathLevel(level){
-  mathLevel = level;
-  mathStreak = 0;
-  status.textContent = `Математика: выбран уровень ${level}`;
-  newMath();
-}
-
-document.getElementById('mathEasy').onclick = () => setMathLevel('easy');
-document.getElementById('mathMedium').onclick = () => setMathLevel('medium');
-document.getElementById('mathHard').onclick = () => setMathLevel('hard');
+function setMathLevel(level){ mathLevel=level; mathStreak=0; status.textContent=`Математика: выбран уровень ${level}`; newMath(); }
+lvlBtns.easy.onclick=()=>setMathLevel('easy');
+lvlBtns.medium.onclick=()=>setMathLevel('medium');
+lvlBtns.hard.onclick=()=>setMathLevel('hard');
 
 document.getElementById('mathSubmit').onclick=()=>{
   const v = Number(mathInputEl.value);
   const ans = calcAnswer();
   mathQuestionEl.classList.remove('math-success','math-error');
   void mathQuestionEl.offsetWidth;
-
   if(v===ans){
     mathStreak += 1;
-    mathScore += (mathLevel==='easy' ? 10 : mathLevel==='medium' ? 20 : 35) + Math.min(mathStreak,10);
+    mathScore += (mathLevel==='easy'?10:mathLevel==='medium'?20:35) + Math.min(mathStreak,10);
     status.textContent='Математика: верно! +очки, новая задача';
     mathQuestionEl.classList.add('math-success');
     updateMathStats();
     setTimeout(newMath, 350);
   } else {
     mathStreak = 0;
-    mathScore = Math.max(0, mathScore - (mathLevel==='hard' ? 8 : 4));
+    mathScore = Math.max(0, mathScore - (mathLevel==='hard'?8:4));
     status.textContent=`Математика: неверно. Правильный ответ ${ans}`;
     mathQuestionEl.classList.add('math-error');
     updateMathStats();
   }
 };
 
-let reactionTimer=null, reactionStart=0;
+// Improved Reaction: starts paused
+let reactionTimer=null, reactionStart=0, reactionState='paused';
 const reactionBtn=document.getElementById('reactionBtn');
-function newReaction(){reactionBtn.style.background='var(--btn-bg)'; reactionBtn.style.color='var(--fg)'; reactionBtn.disabled=true; document.getElementById('reactionText').textContent='Ждите зелёный цвет...';
-  const delay=1200+Math.random()*2200; clearTimeout(reactionTimer);
-  reactionTimer=setTimeout(()=>{reactionBtn.style.background='#2ea043'; reactionBtn.style.color='#fff'; reactionBtn.disabled=false; reactionStart=performance.now();},delay);
-}
-reactionBtn.onclick=()=>{if(reactionBtn.disabled) return; const ms=Math.round(performance.now()-reactionStart); document.getElementById('reactionText').textContent=`Ваше время реакции: ${ms} мс`; status.textContent='Реакция: завершено. Нажмите «Новая игра»'; reactionBtn.disabled=true;};
+const reactionText=document.getElementById('reactionText');
+const reactionStartBtn=document.getElementById('reactionStart');
+const reactionResetBtn=document.getElementById('reactionReset');
 
-document.getElementById('newPuzzle').onclick=()=>{ if(pz==='15') new15(); else if(pz==='mem') newMem(); else if(pz==='ttt') newTtt(); else if(pz==='math') newMath(); else newReaction(); };
-new15(); newMem(); newTtt(); newMath();
+function setReactionVisual(state){
+  reactionBtn.classList.remove('waiting','ready','too-early');
+  if(state==='waiting') reactionBtn.classList.add('waiting');
+  if(state==='ready') reactionBtn.classList.add('ready');
+  if(state==='too-early') reactionBtn.classList.add('too-early');
+}
+
+function reactionPause(){
+  clearTimeout(reactionTimer);
+  reactionState='paused';
+  reactionBtn.disabled=true;
+  setReactionVisual('');
+  reactionText.textContent='Игра на паузе. Нажмите «Старт»';
+}
+
+function newReaction(){
+  clearTimeout(reactionTimer);
+  reactionState='waiting';
+  reactionBtn.disabled=false;
+  setReactionVisual('waiting');
+  reactionText.textContent='Ждите зелёный цвет...';
+  const delay=1200+Math.random()*2500;
+  reactionTimer=setTimeout(()=>{
+    reactionState='ready';
+    setReactionVisual('ready');
+    reactionText.textContent='ЖМИ!';
+    reactionStart=performance.now();
+  },delay);
+}
+
+reactionStartBtn.onclick = () => { status.textContent='Реакция: старт'; newReaction(); };
+reactionResetBtn.onclick = () => { status.textContent='Реакция: пауза'; reactionPause(); };
+
+reactionBtn.onclick=()=>{
+  if(reactionState==='paused') return;
+  if(reactionState==='waiting'){
+    clearTimeout(reactionTimer);
+    reactionState='paused';
+    setReactionVisual('too-early');
+    reactionText.textContent='Слишком рано! Нажмите «Старт»';
+    status.textContent='Реакция: фальстарт';
+    setTimeout(()=>setReactionVisual(''), 500);
+    return;
+  }
+  if(reactionState==='ready'){
+    const ms=Math.round(performance.now()-reactionStart);
+    reactionState='paused';
+    setReactionVisual('');
+    reactionText.textContent=`Ваше время реакции: ${ms} мс`;
+    status.textContent='Реакция: завершено. Нажмите «Старт»';
+  }
+};
+
+document.getElementById('newPuzzle').onclick=()=>{
+  if(pz==='15') new15();
+  else if(pz==='mem') newMem();
+  else if(pz==='ttt') newTtt();
+  else if(pz==='math') newMath();
+  else reactionPause();
+};
+
+ensureMemoryControls();
+new15();
+newMem();
+newTtt();
+newMath();
+reactionPause();
 
 // ai
 document.getElementById('sendAi').onclick = async ()=>{
