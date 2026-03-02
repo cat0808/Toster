@@ -8,21 +8,24 @@ for (const t of tabs) t.onclick = () => {
 };
 
 const themes = {
-  'Светлая':['#eef2fb','#1b1f2b','#ffffff','#4a78d6','#355db0','#dbe4f5'],
-  'Тёмная':['#171b25','#eef2ff','#232a39','#5d9bff','#467ed5','#30384a'],
-  'Фиолетовая':['#efe5ff','#2a1748','#ffffff','#7a46f2','#6438cc','#d9c9ff'],
-  'Зелёная':['#e7f7ee','#123624','#ffffff','#1f9a64','#1b7f54','#c8ead8'],
-  'Оранжевая':['#fff2e6','#4a2913','#ffffff','#e97833','#c96325','#ffd9bd'],
-  'Бирюзовая':['#e8fbfb','#113b3d','#ffffff','#1aa3a8','#128489','#bfecee']
+  'Светлая':['#eef2fb','#1b1f2b','#ffffff','#4a78d6','#355db0','#dbe4f5','#ffffff','#f8fbff','#ffffff'],
+  'Тёмная':['#171b25','#eef2ff','#232a39','#5d9bff','#467ed5','#30384a','#101725','#111a2a','#1a2334'],
+  'Фиолетовая':['#efe5ff','#2a1748','#ffffff','#7a46f2','#6438cc','#d9c9ff','#ffffff','#f7f1ff','#ffffff'],
+  'Зелёная':['#e7f7ee','#123624','#ffffff','#1f9a64','#1b7f54','#c8ead8','#ffffff','#f3fff8','#ffffff'],
+  'Оранжевая':['#fff2e6','#4a2913','#ffffff','#e97833','#c96325','#ffd9bd','#ffffff','#fff7f2','#ffffff'],
+  'Бирюзовая':['#e8fbfb','#113b3d','#ffffff','#1aa3a8','#128489','#bfecee','#ffffff','#f3ffff','#ffffff']
 };
 document.getElementById('themeSelect').onchange = e=>{
-  const [bg,fg,card,acc,acc2,border]=themes[e.target.value];
+  const [bg,fg,card,acc,acc2,border,inputBg,mutedBg,btnBg]=themes[e.target.value];
   document.documentElement.style.setProperty('--bg',bg);
   document.documentElement.style.setProperty('--fg',fg);
   document.documentElement.style.setProperty('--card',card);
   document.documentElement.style.setProperty('--acc',acc);
   document.documentElement.style.setProperty('--acc-2',acc2);
   document.documentElement.style.setProperty('--border',border);
+  document.documentElement.style.setProperty('--input-bg',inputBg);
+  document.documentElement.style.setProperty('--muted-bg',mutedBg);
+  document.documentElement.style.setProperty('--btn-bg',btnBg);
 };
 
 // music

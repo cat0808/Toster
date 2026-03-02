@@ -5,12 +5,15 @@
   --acc:#4a78d6;
   --acc-2:#355db0;
   --border:#dbe4f5;
+  --input-bg:#ffffff;
+  --muted-bg:#f8fbff;
+  --btn-bg:#ffffff;
 }
 *{box-sizing:border-box}
 body{font-family:Segoe UI,sans-serif;background:var(--bg);color:var(--fg);margin:0}
 header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border)}
 header h1{margin:0;font-size:24px}
-#themeSelect{padding:10px 12px;font-size:16px;border-radius:10px;border:1px solid var(--border);background:#fff}
+#themeSelect{padding:10px 12px;font-size:16px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--fg)}
 
 .tabs{display:flex;gap:10px;padding:10px 16px;flex-wrap:wrap}
 .tabs button.active{background:var(--acc);color:#fff;border-color:var(--acc)}
@@ -25,7 +28,7 @@ button{
   min-height:46px;
   border:1px solid var(--border);
   border-radius:12px;
-  background:#fff;
+  background:var(--btn-bg);
   color:var(--fg);
   font-size:16px;
   font-weight:600;
@@ -45,9 +48,11 @@ button:active{transform:translateY(0)}
   border-radius:10px;
   font-size:15px;
   margin-top:8px;
+  background:var(--input-bg);
+  color:var(--fg);
 }
-textarea{min-height:130px;resize:vertical;background:#fff;color:var(--fg)}
-pre{white-space:pre-wrap;background:#f8fbff;min-height:120px}
+textarea{min-height:130px;resize:vertical}
+pre{white-space:pre-wrap;background:var(--muted-bg);min-height:120px}
 #imageView{max-width:100%;max-height:420px;display:block;margin-top:10px;border-radius:10px;border:1px solid var(--border)}
 
 .board15,.boardMem,.boardTtt{display:grid;gap:8px;margin-top:12px}
