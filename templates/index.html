@@ -10,7 +10,7 @@
   <header>
     <div></div>
     <select id="themeSelect">
-      <option>Светлая</option><option>Тёмная</option><option>Фиолетовая</option><option>Зелёная</option><option>Оранжевая</option><option>Бирюзовая</option>
+      <option>Светлая</option><option>Тёмная</option><option>Фиолетовая</option><option>Зелёная</option><option>Оранжевая</option><option>Бирюзовая</option><option>Розовая</option><option>Графит</option><option>Лимонная</option>
     </select>
   </header>
 
@@ -62,6 +62,12 @@
       <div id="boardMem" class="boardMem board-anim hidden"></div>
       <div id="boardTtt" class="boardTtt board-anim hidden"></div>
       <div id="boardMath" class="board-anim hidden">
+        <div class="row">
+          <button id="mathEasy">Лёгкий</button>
+          <button id="mathMedium">Средний</button>
+          <button id="mathHard">Сложный</button>
+        </div>
+        <p id="mathStats">Серия: 0 | Очки: 0</p>
         <p id="mathQuestion"></p>
         <input id="mathInput" type="number" placeholder="Ответ" />
         <button id="mathSubmit">Проверить</button>

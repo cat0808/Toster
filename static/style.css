@@ -30,6 +30,10 @@ pre{white-space:pre-wrap;background:var(--muted-bg);min-height:120px}
 .puzzle-picker .pz.active{background:linear-gradient(135deg,var(--acc),var(--acc-2));color:#fff;border-color:var(--acc-2);box-shadow:0 8px 18px rgba(0,0,0,.15)}
 .board-anim{animation:popIn .22s ease}
 @keyframes popIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
+.math-success{animation:flashGreen .35s ease}
+.math-error{animation:shake .3s ease}
+@keyframes flashGreen{from{box-shadow:0 0 0 rgba(40,180,99,0)}50%{box-shadow:0 0 0 8px rgba(40,180,99,.25)}to{box-shadow:0 0 0 rgba(40,180,99,0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
 .board15,.boardMem,.boardTtt{display:grid;gap:8px;margin-top:12px}
 .board15{grid-template-columns:repeat(4,74px)}
