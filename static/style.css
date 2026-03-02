@@ -1,64 +1,40 @@
 :root{
-  --bg:#eef2fb;
-  --fg:#1b1f2b;
-  --card:#ffffff;
-  --acc:#4a78d6;
-  --acc-2:#355db0;
-  --border:#dbe4f5;
-  --input-bg:#ffffff;
-  --muted-bg:#f8fbff;
-  --btn-bg:#ffffff;
+  --bg:#eef2fb; --fg:#1b1f2b; --card:#fff; --acc:#4a78d6; --acc-2:#355db0; --border:#dbe4f5;
+  --input-bg:#fff; --muted-bg:#f8fbff; --btn-bg:#fff;
 }
 *{box-sizing:border-box}
 body{font-family:Segoe UI,sans-serif;background:var(--bg);color:var(--fg);margin:0}
-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border)}
-header h1{margin:0;font-size:24px}
+header{display:flex;justify-content:flex-end;align-items:center;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border)}
 #themeSelect{padding:10px 12px;font-size:16px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--fg)}
 
 .tabs{display:flex;gap:10px;padding:10px 16px;flex-wrap:wrap}
 .tabs button.active{background:var(--acc);color:#fff;border-color:var(--acc)}
-
 main{padding:14px}
 .tab{display:none;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border);box-shadow:0 4px 14px rgba(0,0,0,.04)}
 .tab.active{display:block}
 
+.fade-in{animation:fadeIn .28s ease}
+@keyframes fadeIn{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
+
 .row{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}
-button{
-  padding:12px 18px;
-  min-height:46px;
-  border:1px solid var(--border);
-  border-radius:12px;
-  background:var(--btn-bg);
-  color:var(--fg);
-  font-size:16px;
-  font-weight:600;
-  cursor:pointer;
-  transition:all .15s ease;
-}
+button{padding:12px 18px;min-height:46px;border:1px solid var(--border);border-radius:12px;background:var(--btn-bg);color:var(--fg);font-size:16px;font-weight:600;cursor:pointer;transition:all .15s ease}
 button:hover{transform:translateY(-1px);border-color:var(--acc);box-shadow:0 4px 10px rgba(0,0,0,.08)}
-button:active{transform:translateY(0)}
+#newPuzzle,#sendAi,#startMusic,#startImage,#mathSubmit{background:var(--acc);border-color:var(--acc);color:#fff}
+#newPuzzle:hover,#sendAi:hover,#startMusic:hover,#startImage:hover,#mathSubmit:hover{background:var(--acc-2);border-color:var(--acc-2)}
 
-#newPuzzle,#sendAi,#startMusic,#startImage{background:var(--acc);border-color:var(--acc);color:#fff}
-#newPuzzle:hover,#sendAi:hover,#startMusic:hover,#startImage:hover{background:var(--acc-2);border-color:var(--acc-2)}
-
-#videoSelect,textarea,pre,audio{
-  width:100%;
-  padding:10px 12px;
-  border:1px solid var(--border);
-  border-radius:10px;
-  font-size:15px;
-  margin-top:8px;
-  background:var(--input-bg);
-  color:var(--fg);
-}
+#videoSelect,textarea,pre,audio,#mathInput{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:15px;margin-top:8px;background:var(--input-bg);color:var(--fg)}
 textarea{min-height:130px;resize:vertical}
 pre{white-space:pre-wrap;background:var(--muted-bg);min-height:120px}
 #imageView{max-width:100%;max-height:420px;display:block;margin-top:10px;border-radius:10px;border:1px solid var(--border)}
+
+.puzzle-picker .pz.active{background:linear-gradient(135deg,var(--acc),var(--acc-2));color:#fff;border-color:var(--acc-2);box-shadow:0 8px 18px rgba(0,0,0,.15)}
+.board-anim{animation:popIn .22s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
 
 .board15,.boardMem,.boardTtt{display:grid;gap:8px;margin-top:12px}
 .board15{grid-template-columns:repeat(4,74px)}
 .boardMem{grid-template-columns:repeat(4,74px)}
 .boardTtt{grid-template-columns:repeat(3,86px)}
 .board15 button,.boardMem button,.boardTtt button{min-height:60px;padding:8px;font-size:20px}
-
+.reaction-btn{min-width:280px}
 .hidden{display:none}

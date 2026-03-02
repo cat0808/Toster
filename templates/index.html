@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Мультимедиа</title>
+  <title>Локальный сайт</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 <body>
   <header>
-    <h1>Мультимедиа</h1>
+    <div></div>
     <select id="themeSelect">
       <option>Светлая</option><option>Тёмная</option><option>Фиолетовая</option><option>Зелёная</option><option>Оранжевая</option><option>Бирюзовая</option>
     </select>
@@ -23,7 +23,7 @@
   </nav>
 
   <main>
-    <section id="music" class="tab active">
+    <section id="music" class="tab active fade-in">
       <p id="musicLabel">Нажмите «Начать слушать музыку»</p>
       <div class="row">
         <button id="startMusic">Начать слушать музыку</button>
@@ -33,12 +33,12 @@
       <audio id="audioPlayer" controls></audio>
     </section>
 
-    <section id="video" class="tab">
+    <section id="video" class="tab fade-in">
       <select id="videoSelect"></select>
       <p id="videoInfo">Выберите видео</p>
     </section>
 
-    <section id="images" class="tab">
+    <section id="images" class="tab fade-in">
       <p id="imageLabel">Нажмите «Начать смотреть картинки»</p>
       <div class="row">
         <button id="startImage">Начать смотреть картинки</button>
@@ -48,20 +48,31 @@
       <img id="imageView" alt="preview" />
     </section>
 
-    <section id="puzzles" class="tab">
+    <section id="puzzles" class="tab fade-in">
       <p id="puzzleStatus">Выберите игру</p>
       <button id="newPuzzle">Новая игра</button>
-      <div class="row">
+      <div class="row puzzle-picker">
         <button data-pz="15" class="pz active">Пятнашки</button>
         <button data-pz="mem" class="pz">Найди пару</button>
         <button data-pz="ttt" class="pz">Крестики-нолики</button>
+        <button data-pz="math" class="pz">Математика</button>
+        <button data-pz="reaction" class="pz">Реакция</button>
       </div>
-      <div id="board15" class="board15"></div>
-      <div id="boardMem" class="boardMem hidden"></div>
-      <div id="boardTtt" class="boardTtt hidden"></div>
+      <div id="board15" class="board15 board-anim"></div>
+      <div id="boardMem" class="boardMem board-anim hidden"></div>
+      <div id="boardTtt" class="boardTtt board-anim hidden"></div>
+      <div id="boardMath" class="board-anim hidden">
+        <p id="mathQuestion"></p>
+        <input id="mathInput" type="number" placeholder="Ответ" />
+        <button id="mathSubmit">Проверить</button>
+      </div>
+      <div id="boardReaction" class="board-anim hidden">
+        <button id="reactionBtn" class="reaction-btn">Жми, когда зелёный</button>
+        <p id="reactionText">Нажмите «Новая игра» для старта</p>
+      </div>
     </section>
 
-    <section id="ai" class="tab">
+    <section id="ai" class="tab fade-in">
       <textarea id="prompt" placeholder="Ваш запрос..."></textarea>
       <button id="sendAi">Отправить</button>
       <pre id="answer"></pre>
