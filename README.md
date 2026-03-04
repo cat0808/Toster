@@ -1,27 +1,45 @@
 # Мультимедиа сайт (Flask)
 
-Проект работает как веб-сайт на Flask и может быть развёрнут локально или на хостинге REG.RU.
+Проект запускается как сайт и может быть собран в **одну чистую папку** без `.git` и лишнего.
 
-## Возможности
+## Быстрый запуск (в 1 клик)
 
-- музыка, видео и картинки из папки `media/`;
-- головоломки в браузере;
-- ИИ-запросы через GigaChat;
-- переключение цветных тем интерфейса.
+В корне проекта есть запускаторы:
 
-## Установка
+- `run_site.bat` — Windows
+- `run_site.sh` — Linux/macOS
+
+Они запускают `start_site.py`, который:
+1. Проверяет зависимости,
+2. При необходимости ставит их из `requirements.txt`,
+3. Поднимает сайт на `http://127.0.0.1:5000`,
+4. Пытается автоматически открыть браузер.
+
+## Как собрать «чистую» папку без Git
+
+Запустите:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+python make_portable_bundle.py
 ```
+
+Появится папка `PortableSite/` — в ней только нужное для запуска сайта:
+
+- `webapp.py`
+- `start_site.py`
+- `run_site.bat` / `run_site.sh`
+- `requirements.txt`
+- `static/`, `templates/`, `media/`
+- `wsgi.py`, `passenger_wsgi.py`
+- `README.md`
+
+Эту папку можно просто перенести/заархивировать и запускать отдельно от репозитория.
 
 ## Куда класть медиафайлы
 
-Складывайте музыку, видео и изображения в папку `media/` в корне проекта. Подпапки поддерживаются.
+Складывайте музыку, видео и изображения в `media/` (подпапки поддерживаются).
 
-Пример структуры:
+Пример:
 
 ```text
 media/
@@ -43,44 +61,15 @@ media/
 - `GIGACHAT_CLIENT_ID`
 - `GIGACHAT_CLIENT_SECRET`
 
-## Локальный запуск
-
-```bash
-python webapp.py
-```
-
-Откройте: `http://127.0.0.1:5000`
-
----
-
 ## Деплой на REG.RU
 
-В проект добавлены WSGI entrypoints для хостинга:
-
-- `passenger_wsgi.py` — для REG.RU shared hosting (Passenger);
-- `wsgi.py` — универсальный WSGI entrypoint (например, для Gunicorn).
-
-### Вариант 1: REG.RU shared hosting (Passenger)
-
-1. Загрузите проект на хостинг (в папку сайта).
-2. Установите зависимости в окружение хостинга:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. В панели REG.RU выберите Python-сайт/приложение и укажите файл запуска: `passenger_wsgi.py`.
-4. Добавьте переменные окружения `GIGACHAT_CLIENT_ID` и `GIGACHAT_CLIENT_SECRET` в настройках хостинга (если используете ИИ).
-5. Перезапустите приложение из панели.
-
-### Вариант 2: VPS на REG.RU (Gunicorn + reverse proxy)
-
-Запуск Gunicorn:
+- Shared hosting (Passenger): используйте `passenger_wsgi.py`.
+- VPS: используйте Gunicorn:
 
 ```bash
 gunicorn -w 2 -b 0.0.0.0:8000 wsgi:application
 ```
 
-Далее проксируйте через Nginx/Apache на ваш домен.
-
 ## Важно
 
-В демонстрационном коде запросы к GigaChat выполняются с `verify=False`. Для production рекомендуется включить проверку TLS-сертификатов.
+В демо-коде запросы к GigaChat идут с `verify=False`. Для production рекомендуется включить проверку TLS-сертификатов.
