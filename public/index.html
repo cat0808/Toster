@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Интерактивный школьный портал</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-theme="theme-1">
+    <header class="hero glass reveal">
+      <h1>Интерактивный школьный портал</h1>
+      <p>5 головоломок • Видео • Изображения • Музыка • Чат с GigaChat</p>
+      <div class="theme-switcher">
+        <span>Темы:</span>
+        <button data-set-theme="theme-1">Тема 1</button>
+        <button data-set-theme="theme-2">Тема 2</button>
+        <button data-set-theme="theme-3">Тема 3</button>
+        <button data-set-theme="theme-4">Тема 4</button>
+        <button data-set-theme="theme-5">Тема 5</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="card glass reveal" id="puzzles">
+        <h2>5 головоломок</h2>
+        <div class="puzzle-grid">
+          <article class="puzzle-card">
+            <h3>1) Угадай число</h3>
+            <p>Я загадал число от 1 до 100.</p>
+            <input id="guess-input" type="number" min="1" max="100" placeholder="Ваш вариант" />
+            <button id="guess-btn">Проверить</button>
+            <p id="guess-result" class="status"></p>
+          </article>
+
+          <article class="puzzle-card">
+            <h3>2) Анаграмма</h3>
+            <p>Соберите слово: <strong id="anagram-word"></strong></p>
+            <input id="anagram-input" type="text" placeholder="Введите слово" />
+            <button id="anagram-btn">Ответить</button>
+            <p id="anagram-result" class="status"></p>
+          </article>
+
+          <article class="puzzle-card">
+            <h3>3) Память</h3>
+            <p>Нажмите «Старт», запомните последовательность и повторите её.</p>
+            <button id="memory-start-btn">Старт</button>
+            <div id="memory-sequence" class="memory-sequence"></div>
+            <input id="memory-input" type="text" placeholder="Например: 3-1-4" />
+            <button id="memory-check-btn">Проверить</button>
+            <p id="memory-result" class="status"></p>
+          </article>
+
+          <article class="puzzle-card">
+            <h3>4) Математический блиц</h3>
+            <p id="math-task">Нажмите «Новый пример».</p>
+            <input id="math-input" type="number" placeholder="Ответ" />
+            <button id="math-new-btn">Новый пример</button>
+            <button id="math-check-btn">Проверить</button>
+            <p id="math-result" class="status"></p>
+          </article>
+
+          <article class="puzzle-card">
+            <h3>5) Логическая задача</h3>
+            <p>Что тяжелее: 1 кг железа или 1 кг ваты?</p>
+            <div class="choices">
+              <button class="logic-choice" data-answer="железо">Железо</button>
+              <button class="logic-choice" data-answer="вата">Вата</button>
+              <button class="logic-choice" data-answer="равны">Равны</button>
+            </div>
+            <p id="logic-result" class="status"></p>
+          </article>
+        </div>
+      </section>
+
+      <section class="card glass reveal" id="media">
+        <h2>Медиа-зона</h2>
+        <div class="media-grid">
+          <article>
+            <h3>Видео</h3>
+            <iframe
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+              title="Обучающее видео"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </article>
+
+          <article>
+            <h3>Изображения</h3>
+            <div class="gallery" id="gallery"></div>
+          </article>
+
+          <article>
+            <h3>Музыка</h3>
+            <audio controls>
+              <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg" />
+              Ваш браузер не поддерживает аудио.
+            </audio>
+          </article>
+        </div>
+      </section>
+
+      <section class="card glass reveal" id="chat">
+        <h2>Обращение к ИИ (GigaChat)</h2>
+        <p>Подключение выполнено через серверный endpoint <code>/api/gigachat</code>.</p>
+        <div class="chat-box" id="chat-box"></div>
+        <div class="chat-controls">
+          <textarea id="chat-input" rows="3" placeholder="Напишите сообщение..."></textarea>
+          <button id="chat-send-btn">Отправить</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="glass reveal">
+      <p>Готово к размещению на REG.RU (Node.js + статические файлы).</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "school-project-site",
+  "version": "1.0.0",
+  "description": "Интерактивный сайт с головоломками, медиа и чатом GigaChat",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}
