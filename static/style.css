@@ -1,0 +1,62 @@
+:root{
+  --bg:#eef2fb; --fg:#1b1f2b; --card:#fff; --acc:#4a78d6; --acc-2:#355db0; --border:#dbe4f5;
+  --input-bg:#fff; --muted-bg:#f8fbff; --btn-bg:#fff;
+}
+*{box-sizing:border-box}
+body{font-family:Segoe UI,sans-serif;background:var(--bg);color:var(--fg);margin:0}
+header{display:flex;justify-content:flex-end;align-items:center;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--border)}
+#themeSelect{padding:10px 12px;font-size:16px;border-radius:10px;border:1px solid var(--border);background:var(--input-bg);color:var(--fg)}
+
+.tabs{display:flex;gap:10px;padding:10px 16px;flex-wrap:wrap}
+.tabs button.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+main{padding:14px}
+.tab{display:none;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border);box-shadow:0 4px 14px rgba(0,0,0,.04)}
+.tab.active{display:block}
+
+.fade-in{animation:fadeIn .28s ease}
+@keyframes fadeIn{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.row{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap}
+button{padding:12px 18px;min-height:46px;border:1px solid var(--border);border-radius:12px;background:var(--btn-bg);color:var(--fg);font-size:16px;font-weight:600;cursor:pointer;transition:all .15s ease}
+button:hover{transform:translateY(-1px);border-color:var(--acc);box-shadow:0 4px 10px rgba(0,0,0,.08)}
+#newPuzzle,#sendAi,#startMusic,#startImage,#mathSubmit{background:var(--acc);border-color:var(--acc);color:#fff}
+#newPuzzle:hover,#sendAi:hover,#startMusic:hover,#startImage:hover,#mathSubmit:hover{background:var(--acc-2);border-color:var(--acc-2)}
+
+#videoSelect,textarea,pre,audio,#mathInput,#videoPlayer{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:15px;margin-top:8px;background:var(--input-bg);color:var(--fg)}
+textarea{min-height:130px;resize:vertical}
+pre{white-space:pre-wrap;background:var(--muted-bg);min-height:120px}
+#videoPlayer{display:block;max-height:620px;min-height:340px;background:#000;padding:0;object-fit:contain}
+#imageView{width:100%;max-height:760px;object-fit:contain;display:block;margin-top:10px;border-radius:10px;border:1px solid var(--border);background:var(--muted-bg)}
+
+.puzzle-picker .pz.active{background:linear-gradient(135deg,var(--acc),var(--acc-2));color:#fff;border-color:var(--acc-2);box-shadow:0 8px 18px rgba(0,0,0,.15)}
+#size15Controls button.active,#sizeMemControls button.active{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 6px 14px rgba(74,120,214,.3)}
+.board-anim{animation:popIn .22s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
+.math-success{animation:flashGreen .35s ease}
+.math-error{animation:shake .3s ease}
+@keyframes flashGreen{from{box-shadow:0 0 0 rgba(40,180,99,0)}50%{box-shadow:0 0 0 8px rgba(40,180,99,.25)}to{box-shadow:0 0 0 rgba(40,180,99,0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.lvl{border-width:2px}
+.lvl.easy{border-color:#2ea043;color:#2ea043}
+.lvl.medium{border-color:#d29922;color:#8a6a0a}
+.lvl.hard{border-color:#cf222e;color:#a40e26}
+.lvl.active{color:#fff !important}
+.lvl.easy.active{background:#2ea043;border-color:#2ea043}
+.lvl.medium.active{background:#d29922;border-color:#d29922}
+.lvl.hard.active{background:#cf222e;border-color:#cf222e}
+
+.reaction-btn.waiting{background:#b88f00;color:#fff;border-color:#b88f00}
+.reaction-btn.ready{background:#2ea043;color:#fff;border-color:#2ea043;animation:pulse .7s infinite}
+.reaction-btn.too-early{background:#cf222e;color:#fff;border-color:#cf222e}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(46,160,67,.4)}70%{box-shadow:0 0 0 12px rgba(46,160,67,0)}100%{box-shadow:0 0 0 0 rgba(46,160,67,0)}}
+
+.board15,.boardMem,.boardTtt{display:grid;gap:8px;margin-top:12px}
+.board15.size-3{grid-template-columns:repeat(3,74px)}
+.board15.size-4{grid-template-columns:repeat(4,74px)}
+.board15.size-5{grid-template-columns:repeat(5,74px)}
+.boardMem.size-4{grid-template-columns:repeat(4,74px)}
+.boardMem.size-6{grid-template-columns:repeat(6,74px)}
+.boardTtt{grid-template-columns:repeat(3,86px)}
+.board15 button,.boardMem button,.boardTtt button{min-height:60px;padding:8px;font-size:20px}
+.reaction-btn{min-width:280px}
+.hidden{display:none}

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Локальный сайт</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <header>
+    <div></div>
+    <select id="themeSelect">
+      <option>Светлая</option><option>Тёмная</option><option>Фиолетовая</option><option>Зелёная</option><option>Оранжевая</option><option>Бирюзовая</option><option>Розовая</option><option>Графит</option><option>Лимонная</option>
+    </select>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="music" class="active">Музыка</button>
+    <button data-tab="video">Видео</button>
+    <button data-tab="images">Картинки</button>
+    <button data-tab="puzzles">Головоломки</button>
+    <button data-tab="ai">ИИ</button>
+  </nav>
+
+  <main>
+    <section id="music" class="tab active fade-in">
+      <p id="musicLabel">Нажмите «Начать слушать музыку»</p>
+      <div class="row">
+        <button id="startMusic">Начать слушать музыку</button>
+        <button id="prevMusic">◀</button>
+        <button id="nextMusic">▶</button>
+      </div>
+      <audio id="audioPlayer" controls></audio>
+    </section>
+
+    <section id="video" class="tab fade-in">
+      <select id="videoSelect"></select>
+      <p id="videoInfo">Выберите видео</p>
+      <video id="videoPlayer" controls playsinline></video>
+    </section>
+
+    <section id="images" class="tab fade-in">
+      <p id="imageLabel">Нажмите «Начать смотреть картинки»</p>
+      <div class="row">
+        <button id="startImage">Начать смотреть картинки</button>
+        <button id="prevImage">◀</button>
+        <button id="nextImage">▶</button>
+      </div>
+      <img id="imageView" alt="preview" />
+    </section>
+
+    <section id="puzzles" class="tab fade-in">
+      <p id="puzzleStatus">Выберите игру</p>
+      <button id="newPuzzle">Новая игра</button>
+      <div class="row puzzle-picker">
+        <button data-pz="15" class="pz active">Пятнашки</button>
+        <button data-pz="mem" class="pz">Найди пару</button>
+        <button data-pz="ttt" class="pz">Крестики-нолики</button>
+        <button data-pz="math" class="pz">Математика</button>
+        <button data-pz="reaction" class="pz">Реакция</button>
+      </div>
+      <div id="size15Controls" class="row">
+        <button id="size15_3">Поле 3×3</button>
+        <button id="size15_4" class="active">Поле 4×4</button>
+        <button id="size15_5">Поле 5×5</button>
+      </div>
+      <div id="sizeMemControls" class="row hidden">
+        <button id="memSize4" class="active">Поле 4×4</button>
+        <button id="memSize6">Поле 6×6</button>
+      </div>
+      <div id="board15" class="board15 board-anim"></div>
+      <div id="boardMem" class="boardMem board-anim hidden"></div>
+      <div id="boardTtt" class="boardTtt board-anim hidden"></div>
+      <div id="boardMath" class="board-anim hidden">
+        <div class="row">
+          <button id="mathEasy" class="lvl easy active">Лёгкий</button>
+          <button id="mathMedium" class="lvl medium">Средний</button>
+          <button id="mathHard" class="lvl hard">Сложный</button>
+        </div>
+        <p id="mathStats">Серия: 0 | Очки: 0</p>
+        <p id="mathQuestion"></p>
+        <input id="mathInput" type="number" placeholder="Ответ" />
+        <button id="mathSubmit">Проверить</button>
+      </div>
+      <div id="boardReaction" class="board-anim hidden">
+        <div class="row">
+          <button id="reactionStart">Старт</button>
+          <button id="reactionReset">Сброс</button>
+        </div>
+        <button id="reactionBtn" class="reaction-btn">Жми, когда зелёный</button>
+        <p id="reactionText">Нажмите «Новая игра» для старта</p>
+      </div>
+    </section>
+
+    <section id="ai" class="tab fade-in">
+      <textarea id="prompt" placeholder="Ваш запрос..."></textarea>
+      <button id="sendAi">Отправить</button>
+      <pre id="answer"></pre>
+    </section>
+  </main>
+
+  <script>
+    window.__DATA__ = {
+      audio: {{ audio_files|tojson }},
+      video: {{ video_files|tojson }},
+      images: {{ image_files|tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
