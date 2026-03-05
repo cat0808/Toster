@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Островок уверенности</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <header>
+    <h1>🌴 Островок уверенности</h1>
+    <p>Выбери формат отдыха: играй, слушай, смотри и разговаривай.</p>
+  </header>
+
+  <main>
+    <section class="menu-grid" id="menuGrid"></section>
+
+    <section class="panel hidden" id="puzzlesPanel">
+      <h2>🧩 Головоломки против бота</h2>
+      <label>Сложность:
+        <select id="difficulty">
+          <option value="easy">Лёгкая</option>
+          <option value="medium">Средняя</option>
+          <option value="hard">Сложная</option>
+        </select>
+      </label>
+      <div class="puzzle-tabs" id="puzzleTabs"></div>
+      <div id="puzzleArea"></div>
+    </section>
+
+    <section class="panel hidden" id="musicPanel">
+      <h2>🎵 Музыка</h2>
+      <div id="musicList" class="list"></div>
+      <audio id="musicPlayer" controls></audio>
+    </section>
+
+    <section class="panel hidden" id="videosPanel">
+      <h2>🎬 Видео</h2>
+      <div id="videoList" class="list"></div>
+      <video id="videoPlayer" controls></video>
+    </section>
+
+    <section class="panel hidden" id="photosPanel">
+      <h2>🖼 Картинки (свайп влево/вправо)</h2>
+      <div id="photoSwipe" class="photo-swipe">
+        <button id="prevPhoto">←</button>
+        <img id="photoView" alt="Фото для расслабления" />
+        <button id="nextPhoto">→</button>
+      </div>
+      <p id="photoCaption"></p>
+    </section>
+
+    <section class="panel hidden" id="chatPanel">
+      <h2>💬 ИИ-психолог</h2>
+      <div id="chatLog" class="chat-log"></div>
+      <form id="chatForm">
+        <input id="chatInput" placeholder="Расскажи, что тебя беспокоит..." />
+        <button>Отправить</button>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
