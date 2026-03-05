@@ -13,9 +13,11 @@
 ## Локальный запуск
 ```bash
 cp .env.example .env
-npm start
+npm run localhost
 ```
 Откройте `http://localhost:3000`.
+
+Для запуска в режиме прод-сервера с доступом извне: `npm start` (по умолчанию `HOST=0.0.0.0`).
 
 ## Переменные окружения
 Смотрите `.env.example`.
@@ -37,7 +39,7 @@ docker run -d --name ostrovok -p 3000:3000 --env-file .env ostrovok-uverennosti
 2. Создайте `.env`.
 3. Запуск:
 ```bash
-npm start
+HOST=0.0.0.0 npm start
 ```
 4. Создайте systemd unit для автоперезапуска и Nginx reverse proxy с HTTPS.
 

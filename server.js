@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const HOST = process.env.HOST || '127.0.0.1';
 const PORT = Number(process.env.PORT || 3000);
 const GIGACHAT_CLIENT_ID = process.env.GIGACHAT_CLIENT_ID || '';
 const GIGACHAT_CLIENT_SECRET = process.env.GIGACHAT_CLIENT_SECRET || '';
@@ -194,6 +195,9 @@ const server = http.createServer(async (req, res) => {
   return serveStatic(req, res);
 });
 
-server.listen(PORT, () => {
-  console.log(`Островок уверенности запущен на http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Островок уверенности запущен на http://${HOST}:${PORT}`);
+  if (HOST === '127.0.0.1') {
+    console.log(`Локальный адрес: http://localhost:${PORT}`);
+  }
 });

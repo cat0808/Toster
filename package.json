@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch server.js",
-    "start": "NODE_ENV=production node server.js",
-    "test": "node --test"
+    "start": "HOST=${HOST:-0.0.0.0} NODE_ENV=production node server.js",
+    "test": "node --test",
+    "localhost": "HOST=127.0.0.1 PORT=3000 node server.js"
   }
 }
