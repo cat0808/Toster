@@ -117,6 +117,18 @@ function hasBadWords(text) {
   return INAPPROPRIATE_WORDS.some((w) => lower.includes(w));
 }
 
+
+function buildLocalPsychologistReply(userMessage) {
+  const text = userMessage.toLowerCase();
+  if (text.includes('трев') || text.includes('страш')) {
+    return 'Понимаю, что сейчас тревожно. Попробуй технику «4-4-4»: 4 секунды вдох, 4 секунды выдох, повтори 4 раза. Если хочешь, разберём твою ситуацию по шагам.';
+  }
+  if (text.includes('ссор') || text.includes('конфликт')) {
+    return 'Ссоры очень выматывают. Попробуй сказать о своих чувствах через фразу «Мне неприятно, когда...», без обвинений. Могу помочь сформулировать спокойно.';
+  }
+  return 'Я рядом и готов поддержать. Расскажи, что произошло, что ты сейчас чувствуешь и чего больше всего хочешь от этой ситуации — разберём вместе.';
+}
+
 async function fetchGigachatToken() {
   if (!GIGACHAT_CLIENT_ID || !GIGACHAT_CLIENT_SECRET) {
     throw new Error('GIGACHAT credentials are not configured');
@@ -187,8 +199,13 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      if (!GIGACHAT_CLIENT_ID || !GIGACHAT_CLIENT_SECRET) {
+        const reply = buildLocalPsychologistReply(message);
+        return sendJson(res, 200, { reply, source: 'local-fallback' });
+      }
+
       const reply = await askGigachat(message);
-      return sendJson(res, 200, { reply });
+      return sendJson(res, 200, { reply, source: 'gigachat' });
     } catch (error) {
       return sendJson(res, 500, { error: `Ошибка чата: ${error.message}` });
     }
