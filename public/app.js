@@ -255,38 +255,75 @@ function renderBulls() {
 
 function renderHangman() {
   const words = ['школа', 'дружба', 'надежда', 'улыбка', 'поддержка'];
-  const word = words[Math.floor(Math.random() * words.length)];
-  let hp = ({ easy: 8, medium: 6, hard: 4 })[level()];
-  const open = new Set();
 
-  puzzleArea.innerHTML = `
-    <h3>Виселица</h3>
-    <div class="puzzle-help">Открывай буквы в слове. Ошибки уменьшают попытки.</div>
-    <div class="game-row">
-      <input id="hchar" maxlength="1" placeholder="буква" />
-      <button id="hgo">Проверить</button>
-    </div>
-    <p id="hmsg"></p>
-  `;
+  function startHangmanGame() {
+    const word = words[Math.floor(Math.random() * words.length)];
+    const maxHp = ({ easy: 8, medium: 6, hard: 4 })[level()];
+    let hp = maxHp;
+    const open = new Set();
 
-  const msg = document.getElementById('hmsg');
+    puzzleArea.innerHTML = `
+      <h3>Виселица</h3>
+      <div class="puzzle-help">Открывай буквы в слове. Ошибки уменьшают попытки. Нажми «Новая игра», чтобы загадать другое слово.</div>
+      <div class="hangman-wrap">
+        <svg id="hangmanSvg" viewBox="0 0 120 140" aria-label="Человечек виселицы">
+          <line x1="10" y1="130" x2="70" y2="130" class="gallow" />
+          <line x1="25" y1="130" x2="25" y2="15" class="gallow" />
+          <line x1="25" y1="15" x2="75" y2="15" class="gallow" />
+          <line x1="75" y1="15" x2="75" y2="30" class="gallow" />
+          <circle cx="75" cy="40" r="10" class="hang-part head" />
+          <line x1="75" y1="50" x2="75" y2="85" class="hang-part body" />
+          <line x1="75" y1="60" x2="60" y2="75" class="hang-part arm-l" />
+          <line x1="75" y1="60" x2="90" y2="75" class="hang-part arm-r" />
+          <line x1="75" y1="85" x2="62" y2="105" class="hang-part leg-l" />
+          <line x1="75" y1="85" x2="88" y2="105" class="hang-part leg-r" />
+        </svg>
+      </div>
+      <div class="game-row">
+        <input id="hchar" maxlength="1" placeholder="буква" />
+        <button id="hgo">Проверить</button>
+        <button id="hnew">Новая игра</button>
+      </div>
+      <p id="hmsg"></p>
+    `;
 
-  function draw() {
-    const masked = word.split('').map((ch) => (open.has(ch) ? ch : '_')).join(' ');
-    msg.textContent = `${masked} | Попытки: ${hp}`;
-    if (!masked.includes('_')) msg.textContent = '✅ Победа! Ты открыл всё слово.';
-    if (hp <= 0) msg.textContent = `🤖 Попытки закончились. Слово: ${word}`;
+    const msg = document.getElementById('hmsg');
+    const hangmanSvg = document.getElementById('hangmanSvg');
+    const parts = ['head', 'body', 'arm-l', 'arm-r', 'leg-l', 'leg-r'];
+
+    function updateHangman() {
+      const wrong = maxHp - hp;
+      const reveal = Math.min(parts.length, Math.ceil((wrong / maxHp) * parts.length));
+      parts.forEach((name, idx) => {
+        const el = hangmanSvg.querySelector(`.${name}`);
+        if (el) el.style.opacity = idx < reveal ? '1' : '0';
+      });
+    }
+
+    function draw() {
+      const masked = word.split('').map((ch) => (open.has(ch) ? ch : '_')).join(' ');
+      msg.textContent = `${masked} | Попытки: ${hp}`;
+      if (!masked.includes('_')) msg.textContent = '✅ Победа! Ты открыл всё слово.';
+      if (hp <= 0) msg.textContent = `🤖 Попытки закончились. Слово: ${word}`;
+      updateHangman();
+    }
+
+    draw();
+
+    document.getElementById('hgo').onclick = () => {
+      const c = document.getElementById('hchar').value.toLowerCase().trim();
+      if (!c || hp <= 0) return;
+      if (word.includes(c)) open.add(c);
+      else hp -= 1;
+      draw();
+    };
+
+    document.getElementById('hnew').onclick = () => startHangmanGame();
   }
 
-  draw();
-  document.getElementById('hgo').onclick = () => {
-    const c = document.getElementById('hchar').value.toLowerCase().trim();
-    if (!c || hp <= 0) return;
-    if (word.includes(c)) open.add(c);
-    else hp -= 1;
-    draw();
-  };
+  startHangmanGame();
 }
+
 
 function renderGuess() {
   const max = ({ easy: 30, medium: 70, hard: 120 })[level()];

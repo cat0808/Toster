@@ -81,6 +81,11 @@ body[data-theme='light'] .user { background: #bae6fd; color: #082f49; }
 input[type='number'], #binput, #hchar { padding: .55rem .65rem; border-radius: 8px; border: 1px solid var(--border); background: var(--input); color: var(--text); }
 .game-row button { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: .55rem .8rem; border-radius: 9px; cursor: pointer; }
 
+.hangman-wrap { margin: .6rem 0; display: flex; justify-content: center; }
+#hangmanSvg { width: 170px; height: 190px; }
+#hangmanSvg .gallow { stroke: var(--text); stroke-width: 4; stroke-linecap: round; opacity: .8; }
+#hangmanSvg .hang-part { stroke: #ef4444; stroke-width: 4; stroke-linecap: round; fill: none; opacity: 0; transition: opacity .2s ease; }
+
 @media (max-width: 700px) {
   .board { grid-template-columns: repeat(3, 60px); }
   .cell { width: 60px; height: 60px; }
