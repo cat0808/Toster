@@ -7,8 +7,19 @@ import crypto from 'node:crypto';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const HOST = process.env.HOST || '127.0.0.1';
-const PORT = Number(process.env.PORT || 3000);
+const argv = process.argv.slice(2);
+const argMap = new Map();
+for (let i = 0; i < argv.length; i += 1) {
+  const token = argv[i];
+  if (token.startsWith('--')) {
+    const key = token.slice(2);
+    const value = argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : 'true';
+    argMap.set(key, value);
+  }
+}
+
+const HOST = argMap.get('host') || process.env.HOST || '127.0.0.1';
+const PORT = Number(argMap.get('port') || process.env.PORT || 3000);
 const GIGACHAT_CLIENT_ID = process.env.GIGACHAT_CLIENT_ID || '';
 const GIGACHAT_CLIENT_SECRET = process.env.GIGACHAT_CLIENT_SECRET || '';
 const GIGACHAT_AUTH_URL = process.env.GIGACHAT_AUTH_URL || 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth';
