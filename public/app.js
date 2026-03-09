@@ -132,6 +132,40 @@ const games = {
 
 let currentGameName = 'Крестики-нолики';
 
+const generationState = {
+  hangmanLastByDifficulty: {},
+  bullsLastByDifficulty: {},
+  guessLastByDifficulty: {}
+};
+
+function randomFromPoolWithoutImmediateRepeat(pool, lastValue) {
+  if (!Array.isArray(pool) || pool.length === 0) return '';
+  if (pool.length === 1) return pool[0];
+  let candidate = pool[Math.floor(Math.random() * pool.length)];
+  let guard = 0;
+  while (candidate === lastValue && guard < 20) {
+    candidate = pool[Math.floor(Math.random() * pool.length)];
+    guard += 1;
+  }
+  return candidate;
+}
+
+function buildUniqueDigitsNumber(length) {
+  const digits = ['0','1','2','3','4','5','6','7','8','9'];
+  const firstPool = digits.slice(1);
+  const picked = [firstPool.splice(Math.floor(Math.random() * firstPool.length), 1)[0]];
+  while (picked.length < length) {
+    const idx = Math.floor(Math.random() * digits.length);
+    const next = digits[idx];
+    if (!picked.includes(next)) picked.push(next);
+  }
+  return picked.join('');
+}
+
+function buildRandomNumberInRange(min, max) {
+  return min + Math.floor(Math.random() * (max - min + 1));
+}
+
 function runCurrentGame() {
   const renderer = games[currentGameName];
   if (renderer) renderer();
@@ -239,39 +273,56 @@ function renderRPS() {
 }
 
 function renderBulls() {
-  const secret = String(Math.floor(1000 + Math.random() * 9000));
+  const settings = {
+    easy: { len: 3 },
+    medium: { len: 4 },
+    hard: { len: 5 }
+  }[level()];
+
+  let secret = buildUniqueDigitsNumber(settings.len);
+  while (secret === generationState.bullsLastByDifficulty[level()]) {
+    secret = buildUniqueDigitsNumber(settings.len);
+  }
+  generationState.bullsLastByDifficulty[level()] = secret;
+
   puzzleArea.innerHTML = `
     <h3>Быки и коровы</h3>
-    <div class="puzzle-help">Угадай 4-значное число. <b>Бык</b> — верная цифра на верном месте, <b>корова</b> — цифра есть, но место другое.</div>
+    <div class="puzzle-help">Угадай ${settings.len}-значное число из разных цифр. <b>Бык</b> — верная цифра на верном месте, <b>корова</b> — цифра есть, но место другое.</div>
     <div class="game-row">
-      <input id="binput" maxlength="4" placeholder="1234" />
+      <input id="binput" maxlength="${settings.len}" placeholder="${'12345'.slice(0, settings.len)}" />
       <button id="bgo">Проверить</button>
     </div>
-    <p id="bmsg">Введи 4 цифры.</p>
+    <p id="bmsg">Введи ${settings.len} цифры.</p>
   `;
 
   document.getElementById('bgo').onclick = () => {
     const g = document.getElementById('binput').value.trim();
-    if (!/^\d{4}$/.test(g)) {
-      document.getElementById('bmsg').textContent = 'Введите ровно 4 цифры.';
+    if (!new RegExp(`^\\d{${settings.len}}$`).test(g)) {
+      document.getElementById('bmsg').textContent = `Введите ровно ${settings.len} цифры.`;
       return;
     }
 
     let bulls = 0;
     let cows = 0;
-    for (let i = 0; i < 4; i += 1) {
+    for (let i = 0; i < settings.len; i += 1) {
       if (g[i] === secret[i]) bulls += 1;
       else if (secret.includes(g[i])) cows += 1;
     }
-    document.getElementById('bmsg').textContent = bulls === 4 ? '✅ Отлично! Ты угадал число.' : `Быки: ${bulls}, коровы: ${cows}`;
+    document.getElementById('bmsg').textContent = bulls === settings.len ? '✅ Отлично! Ты угадал число.' : `Быки: ${bulls}, коровы: ${cows}`;
   };
 }
 
 function renderHangman() {
-  const words = ['школа', 'дружба', 'надежда', 'улыбка', 'поддержка'];
+  const wordsByDifficulty = {
+    easy: ['мир', 'кот', 'школа', 'дружба', 'улыбка'],
+    medium: ['надежда', 'поддержка', 'каникулы', 'доброта', 'спокойствие'],
+    hard: ['самооценка', 'вдохновение', 'взаимопомощь', 'уверенность', 'дисциплина']
+  };
 
   function startHangmanGame() {
-    const word = words[Math.floor(Math.random() * words.length)];
+    const pool = wordsByDifficulty[level()];
+    const word = randomFromPoolWithoutImmediateRepeat(pool, generationState.hangmanLastByDifficulty[level()]);
+    generationState.hangmanLastByDifficulty[level()] = word;
     const maxHp = ({ easy: 8, medium: 6, hard: 4 })[level()];
     let hp = maxHp;
     const open = new Set();
@@ -349,13 +400,23 @@ function renderHangman() {
 
 
 function renderGuess() {
-  const max = ({ easy: 30, medium: 70, hard: 120 })[level()];
-  const num = 1 + Math.floor(Math.random() * max);
-  let tries = ({ easy: 8, medium: 6, hard: 5 })[level()];
+  const settings = ({
+    easy: { min: 1, max: 30, tries: 8 },
+    medium: { min: 10, max: 90, tries: 6 },
+    hard: { min: 50, max: 200, tries: 5 }
+  })[level()];
+
+  let num = buildRandomNumberInRange(settings.min, settings.max);
+  while (num === generationState.guessLastByDifficulty[level()]) {
+    num = buildRandomNumberInRange(settings.min, settings.max);
+  }
+  generationState.guessLastByDifficulty[level()] = num;
+
+  let tries = settings.tries;
 
   puzzleArea.innerHTML = `
     <h3>Угадай число</h3>
-    <div class="puzzle-help">Я загадал число от 1 до ${max}. После каждой попытки будет подсказка: больше или меньше.</div>
+    <div class="puzzle-help">Я загадал число от ${settings.min} до ${settings.max}. После каждой попытки будет подсказка: больше или меньше.</div>
     <div class="game-row">
       <input id="gnum" type="number" placeholder="Введите число" />
       <button id="ggo">Проверить</button>
