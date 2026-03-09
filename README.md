@@ -46,12 +46,11 @@ npm start
 4. Создайте systemd unit для автоперезапуска и Nginx reverse proxy с HTTPS.
 
 ## Структура медиа
-Предпочтительно в корне проекта:
-- `music` — `.mp3/.wav/.ogg/.m4a`
-- `videos` — `.mp4/.webm/.mov/.m4v`
-- `photos` — `.jpg/.jpeg/.png/.webp/.gif`
+Предпочтительный вариант: **медиа-файлы прямо в корне проекта**:
+- музыка: `*.mp3/*.wav/*.ogg/*.m4a`
+- видео: `*.mp4/*.webm/*.mov/*.m4v`
+- фото: `*.jpg/*.jpeg/*.png/*.webp/*.gif`
 
-Также поддерживаются legacy-папки:
-- `media/music`
-- `media/videos`
-- `media/photos`
+Также поддерживаются legacy-папки (для обратной совместимости):
+- `music`, `videos`, `photos`
+- `media/music`, `media/videos`, `media/photos`

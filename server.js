@@ -30,9 +30,9 @@ let gigachatToken = null;
 let tokenExpiresAt = 0;
 
 const mediaConfig = {
-  music: { dirs: [path.join(__dirname, 'music'), path.join(__dirname, 'media/music')], exts: ['.mp3', '.wav', '.ogg', '.m4a'] },
-  videos: { dirs: [path.join(__dirname, 'videos'), path.join(__dirname, 'media/videos')], exts: ['.mp4', '.webm', '.mov', '.m4v'] },
-  photos: { dirs: [path.join(__dirname, 'photos'), path.join(__dirname, 'media/photos')], exts: ['.jpg', '.jpeg', '.png', '.webp', '.gif'] }
+  music: { exts: ['.mp3', '.wav', '.ogg', '.m4a'], legacyDirs: [path.join(__dirname, 'music'), path.join(__dirname, 'media/music')] },
+  videos: { exts: ['.mp4', '.webm', '.mov', '.m4v'], legacyDirs: [path.join(__dirname, 'videos'), path.join(__dirname, 'media/videos')] },
+  photos: { exts: ['.jpg', '.jpeg', '.png', '.webp', '.gif'], legacyDirs: [path.join(__dirname, 'photos'), path.join(__dirname, 'media/photos')] }
 };
 
 const botSystemPrompt = `Ты — доброжелательный и эмпатичный школьный психолог по имени "Островок".
@@ -56,13 +56,23 @@ async function listMedia(type) {
   if (!config) return [];
 
   const collected = new Map();
-  for (const dir of config.dirs) {
+
+  try {
+    const rootFiles = await fs.readdir(__dirname);
+    rootFiles
+      .filter((file) => config.exts.includes(path.extname(file).toLowerCase()))
+      .forEach((file) => {
+        if (!collected.has(file)) collected.set(file, { name: file, url: `/media/${encodeURIComponent(file)}` });
+      });
+  } catch {}
+
+  for (const dir of config.legacyDirs) {
     try {
       const files = await fs.readdir(dir);
       files
         .filter((file) => config.exts.includes(path.extname(file).toLowerCase()))
         .forEach((file) => {
-          if (!collected.has(file)) collected.set(file, { name: file, url: `/media/${type}/${encodeURIComponent(file)}` });
+          if (!collected.has(file)) collected.set(file, { name: file, url: `/media/${encodeURIComponent(file)}` });
         });
     } catch {}
   }
@@ -73,23 +83,34 @@ async function listMedia(type) {
 async function serveStatic(req, res) {
   const url = new URL(req.url || '/', `http://${req.headers.host}`);
   if (url.pathname.startsWith('/media/')) {
-    const parts = decodeURIComponent(url.pathname).split('/').filter(Boolean);
-    const [, type, ...rest] = parts;
-    const fileName = rest.join('/');
-    const config = mediaConfig[type];
-    if (!config || !fileName || fileName.includes('..')) return sendJson(res, 404, { error: 'Not found' });
+    const fileName = decodeURIComponent(url.pathname.replace('/media/', ''));
+    if (!fileName || fileName.includes('..') || fileName.includes('/')) return sendJson(res, 404, { error: 'Not found' });
 
     let filePath = '';
-    for (const dir of config.dirs) {
-      const candidate = path.join(dir, fileName);
-      if (!candidate.startsWith(dir)) continue;
+
+    const rootCandidate = path.join(__dirname, fileName);
+    if (rootCandidate.startsWith(__dirname)) {
       try {
-        const stat = await fs.stat(candidate);
-        if (stat.isFile()) {
-          filePath = candidate;
-          break;
-        }
+        const stat = await fs.stat(rootCandidate);
+        if (stat.isFile()) filePath = rootCandidate;
       } catch {}
+    }
+
+    if (!filePath) {
+      for (const config of Object.values(mediaConfig)) {
+        for (const dir of config.legacyDirs) {
+          const candidate = path.join(dir, fileName);
+          if (!candidate.startsWith(dir)) continue;
+          try {
+            const stat = await fs.stat(candidate);
+            if (stat.isFile()) {
+              filePath = candidate;
+              break;
+            }
+          } catch {}
+        }
+        if (filePath) break;
+      }
     }
 
     if (!filePath) return sendJson(res, 404, { error: 'Not found' });
