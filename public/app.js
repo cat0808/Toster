@@ -473,6 +473,8 @@ function renderMemoryPairs() {
 
   const board = document.getElementById('memoryBoard');
   const msg = document.getElementById('memoryMsg');
+  const cols = Math.ceil(Math.sqrt(deck.length));
+  board.style.setProperty('--cols', String(cols));
 
   function updateStatus(extra = '') {
     msg.textContent = `${playerTurn ? 'Твой ход' : 'Ход бота'} | Ты: ${playerScore} пар, Бот: ${botScore} пар${extra ? ` | ${extra}` : ''}`;
@@ -490,21 +492,19 @@ function renderMemoryPairs() {
     });
   }
 
-  function openCard(i) {
-    const card = deck[i];
-    if (lock || card.done || card.open) return;
-    card.open = true;
-    renderBoard();
+  function finishIfNeeded() {
+    const donePairs = deck.filter((c) => c.done).length / 2;
+    if (donePairs !== cfg.pairs) return false;
+    if (playerScore > botScore) updateStatus('✅ Ты победил!');
+    else if (playerScore < botScore) updateStatus('🤖 Победил бот.');
+    else updateStatus('🤝 Ничья.');
+    return true;
+  }
 
-    if (first === null) {
-      first = i;
-      updateStatus('Выбери вторую карточку');
-      return;
-    }
-
+  function resolvePair(i1, i2) {
     lock = true;
-    const a = deck[first];
-    const b = deck[i];
+    const a = deck[i1];
+    const b = deck[i2];
     const matched = a.value === b.value;
 
     setTimeout(() => {
@@ -522,18 +522,25 @@ function renderMemoryPairs() {
       first = null;
       lock = false;
       renderBoard();
-
-      const donePairs = deck.filter((c) => c.done).length / 2;
-      if (donePairs === cfg.pairs) {
-        if (playerScore > botScore) updateStatus('✅ Ты победил!');
-        else if (playerScore < botScore) updateStatus('🤖 Победил бот.');
-        else updateStatus('🤝 Ничья.');
-        return;
-      }
-
+      if (finishIfNeeded()) return;
       updateStatus();
       if (!playerTurn) botTurn();
     }, 550);
+  }
+
+  function openCard(i) {
+    const card = deck[i];
+    if (lock || card.done || card.open || !playerTurn) return;
+    card.open = true;
+    renderBoard();
+
+    if (first === null) {
+      first = i;
+      updateStatus('Выбери вторую карточку');
+      return;
+    }
+
+    resolvePair(first, i);
   }
 
   function botTurn() {
@@ -541,7 +548,7 @@ function renderMemoryPairs() {
       .map((c, i) => ({ ...c, i }))
       .filter((c) => !c.done && !c.open)
       .map((c) => c.i);
-    if (available.length < 2) return;
+    if (available.length < 2 || lock) return;
 
     const i1 = available[Math.floor(Math.random() * available.length)];
     const rest = available.filter((i) => i !== i1);
@@ -552,11 +559,11 @@ function renderMemoryPairs() {
     setTimeout(() => {
       deck[i2].open = true;
       renderBoard();
-      first = i1;
-      openCard(i2);
+      resolvePair(i1, i2);
     }, 450);
   }
 
   renderBoard();
   updateStatus();
 }
+
