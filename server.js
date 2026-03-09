@@ -88,27 +88,31 @@ async function serveStatic(req, res) {
   }
 
   const safePath = sanitizePath(url.pathname);
-  const localPath = path.join(__dirname, 'public', safePath);
-  if (!localPath.startsWith(path.join(__dirname, 'public'))) return sendJson(res, 403, { error: 'Forbidden' });
-  try {
-    const data = await fs.readFile(localPath);
-    const ext = path.extname(localPath).toLowerCase();
-    const mime = {
-      '.html': 'text/html; charset=utf-8',
-      '.css': 'text/css; charset=utf-8',
-      '.js': 'application/javascript; charset=utf-8',
-      '.json': 'application/json; charset=utf-8'
-    }[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': mime });
-    res.end(data);
-  } catch {
+  const allowedStatic = new Set(['/index.html', '/app.js', '/styles.css']);
+  const staticPath = safePath === '/' ? '/index.html' : safePath;
+
+  if (allowedStatic.has(staticPath)) {
+    const localPath = path.join(__dirname, staticPath);
     try {
-      const html = await fs.readFile(path.join(__dirname, 'public/index.html'));
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(html);
-    } catch {
-      sendJson(res, 404, { error: 'Not found' });
-    }
+      const data = await fs.readFile(localPath);
+      const ext = path.extname(localPath).toLowerCase();
+      const mime = {
+        '.html': 'text/html; charset=utf-8',
+        '.css': 'text/css; charset=utf-8',
+        '.js': 'application/javascript; charset=utf-8',
+        '.json': 'application/json; charset=utf-8'
+      }[ext] || 'application/octet-stream';
+      res.writeHead(200, { 'Content-Type': mime });
+      return res.end(data);
+    } catch {}
+  }
+
+  try {
+    const html = await fs.readFile(path.join(__dirname, 'index.html'));
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(html);
+  } catch {
+    sendJson(res, 404, { error: 'Not found' });
   }
 }
 

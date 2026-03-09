@@ -8,7 +8,9 @@
 - `Dockerfile`
 - `.dockerignore`
 - `.env.example`
-- `public/`
+- `index.html`
+- `app.js`
+- `styles.css`
 - `media/` (папки для музыки, видео, фото)
 
 ## Быстрый запуск (Node.js)
