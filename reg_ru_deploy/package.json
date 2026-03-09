@@ -1,0 +1,12 @@
+{
+  "name": "ostrovok-uverennosti",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js --host 0.0.0.0",
+    "test": "node --test",
+    "localhost": "node server.js --host 127.0.0.1 --port 3000"
+  }
+}
