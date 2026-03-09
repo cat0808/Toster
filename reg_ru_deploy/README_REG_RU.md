@@ -11,7 +11,8 @@
 - `index.html`
 - `app.js`
 - `styles.css`
-- `media/` (папки для музыки, видео, фото)
+- `music/`, `videos/`, `photos/` (медиа из корня)
+- также поддерживаются `media/music`, `media/videos`, `media/photos`
 
 ## Быстрый запуск (Node.js)
 1. Скопируйте папку `reg_ru_deploy` на сервер.

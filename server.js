@@ -30,9 +30,9 @@ let gigachatToken = null;
 let tokenExpiresAt = 0;
 
 const mediaConfig = {
-  music: { dir: path.join(__dirname, 'media/music'), exts: ['.mp3', '.wav', '.ogg', '.m4a'] },
-  videos: { dir: path.join(__dirname, 'media/videos'), exts: ['.mp4', '.webm', '.mov', '.m4v'] },
-  photos: { dir: path.join(__dirname, 'media/photos'), exts: ['.jpg', '.jpeg', '.png', '.webp', '.gif'] }
+  music: { dirs: [path.join(__dirname, 'music'), path.join(__dirname, 'media/music')], exts: ['.mp3', '.wav', '.ogg', '.m4a'] },
+  videos: { dirs: [path.join(__dirname, 'videos'), path.join(__dirname, 'media/videos')], exts: ['.mp4', '.webm', '.mov', '.m4v'] },
+  photos: { dirs: [path.join(__dirname, 'photos'), path.join(__dirname, 'media/photos')], exts: ['.jpg', '.jpeg', '.png', '.webp', '.gif'] }
 };
 
 const botSystemPrompt = `Ты — доброжелательный и эмпатичный школьный психолог по имени "Островок".
@@ -54,37 +54,55 @@ function sanitizePath(urlPath) {
 async function listMedia(type) {
   const config = mediaConfig[type];
   if (!config) return [];
-  try {
-    const files = await fs.readdir(config.dir);
-    return files
-      .filter((file) => config.exts.includes(path.extname(file).toLowerCase()))
-      .sort((a, b) => a.localeCompare(b, 'ru'))
-      .map((file) => ({ name: file, url: `/media/${type}/${encodeURIComponent(file)}` }));
-  } catch {
-    return [];
+
+  const collected = new Map();
+  for (const dir of config.dirs) {
+    try {
+      const files = await fs.readdir(dir);
+      files
+        .filter((file) => config.exts.includes(path.extname(file).toLowerCase()))
+        .forEach((file) => {
+          if (!collected.has(file)) collected.set(file, { name: file, url: `/media/${type}/${encodeURIComponent(file)}` });
+        });
+    } catch {}
   }
+
+  return [...collected.values()].sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 }
 
 async function serveStatic(req, res) {
   const url = new URL(req.url || '/', `http://${req.headers.host}`);
   if (url.pathname.startsWith('/media/')) {
-    const filePath = path.join(__dirname, decodeURIComponent(url.pathname));
-    if (!filePath.startsWith(path.join(__dirname, 'media'))) return sendJson(res, 403, { error: 'Forbidden' });
-    try {
-      const stat = await fs.stat(filePath);
-      if (!stat.isFile()) return sendJson(res, 404, { error: 'Not found' });
-      const ext = path.extname(filePath).toLowerCase();
-      const mime = {
-        '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg', '.m4a': 'audio/mp4',
-        '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime', '.m4v': 'video/x-m4v',
-        '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif'
-      }[ext] || 'application/octet-stream';
-      res.writeHead(200, { 'Content-Type': mime });
-      const buffer = await fs.readFile(filePath);
-      return res.end(buffer);
-    } catch {
-      return sendJson(res, 404, { error: 'Not found' });
+    const parts = decodeURIComponent(url.pathname).split('/').filter(Boolean);
+    const [, type, ...rest] = parts;
+    const fileName = rest.join('/');
+    const config = mediaConfig[type];
+    if (!config || !fileName || fileName.includes('..')) return sendJson(res, 404, { error: 'Not found' });
+
+    let filePath = '';
+    for (const dir of config.dirs) {
+      const candidate = path.join(dir, fileName);
+      if (!candidate.startsWith(dir)) continue;
+      try {
+        const stat = await fs.stat(candidate);
+        if (stat.isFile()) {
+          filePath = candidate;
+          break;
+        }
+      } catch {}
     }
+
+    if (!filePath) return sendJson(res, 404, { error: 'Not found' });
+
+    const ext = path.extname(filePath).toLowerCase();
+    const mime = {
+      '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg', '.m4a': 'audio/mp4',
+      '.mp4': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime', '.m4v': 'video/x-m4v',
+      '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif'
+    }[ext] || 'application/octet-stream';
+    res.writeHead(200, { 'Content-Type': mime });
+    const buffer = await fs.readFile(filePath);
+    return res.end(buffer);
   }
 
   const safePath = sanitizePath(url.pathname);
