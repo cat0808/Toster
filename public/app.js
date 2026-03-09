@@ -10,6 +10,7 @@ const menuGrid = document.getElementById('menuGrid');
 const difficulty = document.getElementById('difficulty');
 const puzzleTabs = document.getElementById('puzzleTabs');
 const puzzleArea = document.getElementById('puzzleArea');
+const newPuzzleGameBtn = document.getElementById('newPuzzleGame');
 
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -129,13 +130,26 @@ const games = {
   'Угадай число': renderGuess
 };
 
+let currentGameName = 'Крестики-нолики';
+
+function runCurrentGame() {
+  const renderer = games[currentGameName];
+  if (renderer) renderer();
+}
+
 Object.keys(games).forEach((name, i) => {
   const b = document.createElement('button');
   b.textContent = name;
-  b.onclick = () => games[name]();
+  b.onclick = () => {
+    currentGameName = name;
+    runCurrentGame();
+  };
   puzzleTabs.append(b);
-  if (!i) games[name]();
+  if (!i) runCurrentGame();
 });
+
+newPuzzleGameBtn.onclick = () => runCurrentGame();
+difficulty.onchange = () => runCurrentGame();
 
 function level() { return difficulty.value; }
 function botChance() { return ({ easy: 0.35, medium: 0.6, hard: 0.85 })[level()]; }
