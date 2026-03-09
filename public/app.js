@@ -448,9 +448,9 @@ function renderGuess() {
 
 function renderMemoryPairs() {
   const cfg = ({
-    easy: { pairs: 4, symbols: ['🍎','🌟','🎈','🐬','🍀','🚲'] },
-    medium: { pairs: 6, symbols: ['🍎','🌟','🎈','🐬','🍀','🚲','🎵','🦋','⚽'] },
-    hard: { pairs: 8, symbols: ['🍎','🌟','🎈','🐬','🍀','🚲','🎵','🦋','⚽','🧩','🎯','🌈'] }
+    easy: { pairs: 6, symbols: ['🍎','🌟','🎈','🐬','🍀','🚲','🎵','🦋'] },
+    medium: { pairs: 8, symbols: ['🍎','🌟','🎈','🐬','🍀','🚲','🎵','🦋','⚽','🧩'] },
+    hard: { pairs: 10, symbols: ['🍎','🌟','🎈','🐬','🍀','🚲','🎵','🦋','⚽','🧩','🎯','🌈','🧠','📚'] }
   })[level()];
 
   const picked = cfg.symbols.slice(0, cfg.pairs);
