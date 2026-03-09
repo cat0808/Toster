@@ -127,7 +127,8 @@ const games = {
   'Камень-ножницы-бумага': renderRPS,
   'Быки и коровы': renderBulls,
   'Виселица': renderHangman,
-  'Угадай число': renderGuess
+  'Угадай число': renderGuess,
+  'Память: Найди пару': renderMemoryPairs
 };
 
 let currentGameName = 'Крестики-нолики';
@@ -348,7 +349,6 @@ function renderHangman() {
       <div class="game-row">
         <input id="hchar" maxlength="1" placeholder="буква" />
         <button id="hgo">Проверить</button>
-        <button id="hnew">Новая игра</button>
       </div>
       <p id="hused">Использованные буквы: —</p>
       <p id="hmsg"></p>
@@ -392,7 +392,6 @@ function renderHangman() {
       draw();
     };
 
-    document.getElementById('hnew').onclick = () => startHangmanGame();
   }
 
   startHangmanGame();
@@ -444,4 +443,120 @@ function renderGuess() {
 
     document.getElementById('gmsg').textContent = `${g < num ? 'Загаданное число больше' : 'Загаданное число меньше'} | Осталось попыток: ${tries}`;
   };
+}
+
+
+function renderMemoryPairs() {
+  const cfg = ({
+    easy: { pairs: 4, symbols: ['🍎','🌟','🎈','🐬','🍀','🚲'] },
+    medium: { pairs: 6, symbols: ['🍎','🌟','🎈','🐬','🍀','🚲','🎵','🦋','⚽'] },
+    hard: { pairs: 8, symbols: ['🍎','🌟','🎈','🐬','🍀','🚲','🎵','🦋','⚽','🧩','🎯','🌈'] }
+  })[level()];
+
+  const picked = cfg.symbols.slice(0, cfg.pairs);
+  const deck = [...picked, ...picked]
+    .sort(() => Math.random() - 0.5)
+    .map((value, idx) => ({ id: idx, value, open: false, done: false }));
+
+  let first = null;
+  let lock = false;
+  let playerScore = 0;
+  let botScore = 0;
+  let playerTurn = true;
+
+  puzzleArea.innerHTML = `
+    <h3>Память: Найди пару</h3>
+    <div class="puzzle-help">Открывай карточки и собирай пары одинаковых символов. Ты играешь против бота: кто соберёт больше пар, тот победил.</div>
+    <div id="memoryBoard" class="memory-board"></div>
+    <p id="memoryMsg"></p>
+  `;
+
+  const board = document.getElementById('memoryBoard');
+  const msg = document.getElementById('memoryMsg');
+
+  function updateStatus(extra = '') {
+    msg.textContent = `${playerTurn ? 'Твой ход' : 'Ход бота'} | Ты: ${playerScore} пар, Бот: ${botScore} пар${extra ? ` | ${extra}` : ''}`;
+  }
+
+  function renderBoard() {
+    board.innerHTML = '';
+    deck.forEach((card, i) => {
+      const b = document.createElement('button');
+      b.className = `memory-card ${card.done ? 'done' : ''}`;
+      b.textContent = (card.open || card.done) ? card.value : '❔';
+      b.disabled = card.done || lock || !playerTurn;
+      b.onclick = () => openCard(i);
+      board.append(b);
+    });
+  }
+
+  function openCard(i) {
+    const card = deck[i];
+    if (lock || card.done || card.open) return;
+    card.open = true;
+    renderBoard();
+
+    if (first === null) {
+      first = i;
+      updateStatus('Выбери вторую карточку');
+      return;
+    }
+
+    lock = true;
+    const a = deck[first];
+    const b = deck[i];
+    const matched = a.value === b.value;
+
+    setTimeout(() => {
+      if (matched) {
+        a.done = true;
+        b.done = true;
+        if (playerTurn) playerScore += 1;
+        else botScore += 1;
+      } else {
+        a.open = false;
+        b.open = false;
+        playerTurn = !playerTurn;
+      }
+
+      first = null;
+      lock = false;
+      renderBoard();
+
+      const donePairs = deck.filter((c) => c.done).length / 2;
+      if (donePairs === cfg.pairs) {
+        if (playerScore > botScore) updateStatus('✅ Ты победил!');
+        else if (playerScore < botScore) updateStatus('🤖 Победил бот.');
+        else updateStatus('🤝 Ничья.');
+        return;
+      }
+
+      updateStatus();
+      if (!playerTurn) botTurn();
+    }, 550);
+  }
+
+  function botTurn() {
+    const available = deck
+      .map((c, i) => ({ ...c, i }))
+      .filter((c) => !c.done && !c.open)
+      .map((c) => c.i);
+    if (available.length < 2) return;
+
+    const i1 = available[Math.floor(Math.random() * available.length)];
+    const rest = available.filter((i) => i !== i1);
+    const i2 = rest[Math.floor(Math.random() * rest.length)];
+
+    deck[i1].open = true;
+    renderBoard();
+    setTimeout(() => {
+      deck[i2].open = true;
+      renderBoard();
+      first = i1;
+      openCard(i2);
+    }, 450);
+  }
+
+  renderBoard();
+  updateStatus();
 }

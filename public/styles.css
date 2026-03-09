@@ -100,6 +100,11 @@ body[data-theme='light'] .user { background: #bae6fd; color: #082f49; }
 input[type='number'], #binput, #hchar { padding: .55rem .65rem; border-radius: 8px; border: 1px solid var(--border); background: var(--input); color: var(--text); }
 .game-row button { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: .55rem .8rem; border-radius: 9px; cursor: pointer; }
 
+
+.memory-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: .55rem; margin: .8rem 0; max-width: 520px; }
+.memory-card { min-height: 62px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 1.4rem; cursor: pointer; }
+.memory-card.done { opacity: .7; }
+
 .hangman-wrap { margin: .6rem 0; display: flex; justify-content: center; }
 #hangmanSvg { width: 170px; height: 190px; }
 #hangmanSvg .gallow { stroke: var(--text); stroke-width: 4; stroke-linecap: round; opacity: .8; }
