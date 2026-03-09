@@ -275,6 +275,7 @@ function renderHangman() {
     const maxHp = ({ easy: 8, medium: 6, hard: 4 })[level()];
     let hp = maxHp;
     const open = new Set();
+    const used = new Set();
 
     puzzleArea.innerHTML = `
       <h3>Виселица</h3>
@@ -298,10 +299,12 @@ function renderHangman() {
         <button id="hgo">Проверить</button>
         <button id="hnew">Новая игра</button>
       </div>
+      <p id="hused">Использованные буквы: —</p>
       <p id="hmsg"></p>
     `;
 
     const msg = document.getElementById('hmsg');
+    const usedEl = document.getElementById('hused');
     const hangmanSvg = document.getElementById('hangmanSvg');
     const parts = ['head', 'body', 'arm-l', 'arm-r', 'leg-l', 'leg-r'];
 
@@ -316,6 +319,7 @@ function renderHangman() {
 
     function draw() {
       const masked = word.split('').map((ch) => (open.has(ch) ? ch : '_')).join(' ');
+      usedEl.textContent = `Использованные буквы: ${used.size ? [...used].join(', ') : '—'}`;
       msg.textContent = `${masked} | Попытки: ${hp}`;
       if (!masked.includes('_')) msg.textContent = '✅ Победа! Ты открыл всё слово.';
       if (hp <= 0) msg.textContent = `🤖 Попытки закончились. Слово: ${word}`;
@@ -327,6 +331,11 @@ function renderHangman() {
     document.getElementById('hgo').onclick = () => {
       const c = document.getElementById('hchar').value.toLowerCase().trim();
       if (!c || hp <= 0) return;
+      if (used.has(c)) {
+        msg.textContent = `Буква «${c}» уже была. Попробуй другую.`;
+        return;
+      }
+      used.add(c);
       if (word.includes(c)) open.add(c);
       else hp -= 1;
       draw();
