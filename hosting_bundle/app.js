@@ -44,29 +44,34 @@ async function fetchJson(url) {
   return r.json();
 }
 
+const RUTUBE_VIDEOS = [
+  { title: 'Спокойная музыка и природа', embed: 'https://rutube.ru/play/embed/5f3b6fbe9b2b2ba44ca6203f7af579a3/' },
+  { title: 'Расслабляющее видео для отдыха', embed: 'https://rutube.ru/play/embed/6a4d1f7c01f43084f0ddf7d77be66ef4/' },
+  { title: 'Мотивационное видео для школьников', embed: 'https://rutube.ru/play/embed/8ad0f4e6df4e73f6efd6a838f438e2d5/' }
+];
+
 (async function initMedia() {
-  const music = await fetchJson('/api/media/music');
+  const manifest = await fetchJson('/media-manifest.json').catch(() => ({ music: [], photos: [] }));
+
   const player = document.getElementById('musicPlayer');
   const list = document.getElementById('musicList');
-  music.items.forEach((m) => {
+  manifest.music.forEach((m) => {
     const b = document.createElement('button');
-    b.textContent = m.name;
-    b.onclick = () => { player.src = m.url; player.play(); };
+    b.textContent = m;
+    b.onclick = () => { player.src = m; player.play(); };
     list.append(b);
   });
 
-  const photos = await fetchJson('/api/media/photos');
   const feed = document.getElementById('photoFeed');
-  photos.items.forEach((p) => {
+  manifest.photos.forEach((p) => {
     const fig = document.createElement('figure');
-    fig.innerHTML = `<img src="${p.url}" alt="${p.name}"/><figcaption>${p.name}</figcaption>`;
+    fig.innerHTML = `<img src="${p}" alt="photo"/><figcaption>${p}</figcaption>`;
     feed.append(fig);
   });
 
-  const videos = await fetchJson('/api/videos');
   const vlist = document.getElementById('rutubeList');
   const frame = document.getElementById('rutubeFrame');
-  videos.items.forEach((v, i) => {
+  RUTUBE_VIDEOS.forEach((v, i) => {
     const b = document.createElement('button');
     b.textContent = v.title;
     b.onclick = () => frame.src = v.embed;
@@ -75,6 +80,7 @@ async function fetchJson(url) {
   });
 })();
 
+const AI_BACKEND_URL = window.AI_BACKEND_URL || 'http://localhost:8001';
 const chatLog = document.getElementById('chatLog');
 function addMsg(text, cls) {
   const d = document.createElement('div');
@@ -92,7 +98,7 @@ document.getElementById('chatForm').onsubmit = async (e) => {
   if (!text) return;
   addMsg(text, 'user');
   input.value = '';
-  const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
+  const r = await fetch(`${AI_BACKEND_URL}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
   const data = await r.json();
   addMsg(data.reply || 'Ошибка', 'bot');
 };
@@ -128,10 +134,7 @@ function tic() {
   const board = area.querySelector('.board');
   const msg = area.querySelector('#m');
   const w = () => win.some(([a,c,d]) => b[a] && b[a]===b[c] && b[c]===b[d]);
-  const draw = () => {
-    board.innerHTML = '';
-    b.forEach((v,i)=>{ const c=document.createElement('button'); c.className='cell'; c.textContent=v; c.onclick=()=>mv(i); board.append(c); });
-  };
+  const draw = () => { board.innerHTML=''; b.forEach((v,i)=>{const c=document.createElement('button'); c.className='cell'; c.textContent=v; c.onclick=()=>mv(i); board.append(c);}); };
   const mv = (i)=>{ if(b[i]||w())return; b[i]='X'; if(w()) return msg.textContent='Победа!'; bot(); draw(); };
   const bot = ()=>{ const f=b.map((v,i)=>v?'':i).filter(x=>x!==''); if(!f.length){msg.textContent='Ничья'; return;} b[f[Math.floor(Math.random()*f.length)]]='O'; if(w()) msg.textContent='Бот победил';};
   draw();
@@ -145,32 +148,24 @@ function rps() {
 
 function hangman() {
   const words={easy:['дом','мир','кот'],medium:['дружба','улыбка','надежда'],hard:['вдохновение','самооценка','уверенность']}[difficulty.value];
-  const word=words[Math.floor(Math.random()*words.length)];
-  let hp={easy:8,medium:6,hard:4}[difficulty.value];
-  const open=new Set();
+  const word=words[Math.floor(Math.random()*words.length)]; let hp={easy:8,medium:6,hard:4}[difficulty.value]; const open=new Set();
   area.innerHTML='<input id="h" maxlength="1"/><button id="go">Буква</button><p id="m"></p>';
-  const m=document.getElementById('m');
-  const draw=()=>{const s=word.split('').map(c=>open.has(c)?c:'_').join(' ');m.textContent=`${s} | попытки ${hp}`};
-  draw();
-  document.getElementById('go').onclick=()=>{const c=document.getElementById('h').value.toLowerCase();if(word.includes(c))open.add(c);else hp--;draw();};
+  const m=document.getElementById('m'); const draw=()=>{const s=word.split('').map(c=>open.has(c)?c:'_').join(' ');m.textContent=`${s} | попытки ${hp}`};
+  draw(); document.getElementById('go').onclick=()=>{const c=document.getElementById('h').value.toLowerCase();if(word.includes(c))open.add(c);else hp--;draw();};
 }
 
 function guess() {
-  const cfg={easy:[1,30,8],medium:[10,90,6],hard:[50,200,5]}[difficulty.value];
-  const n=cfg[0]+Math.floor(Math.random()*(cfg[1]-cfg[0]+1)); let t=cfg[2];
+  const cfg={easy:[1,30,8],medium:[10,90,6],hard:[50,200,5]}[difficulty.value]; const n=cfg[0]+Math.floor(Math.random()*(cfg[1]-cfg[0]+1)); let t=cfg[2];
   area.innerHTML=`<p>Число от ${cfg[0]} до ${cfg[1]}</p><input id="g" type="number"/><button id="go">Проверить</button><p id="m"></p>`;
   document.getElementById('go').onclick=()=>{const v=Number(document.getElementById('g').value);t--;document.getElementById('m').textContent=v===n?'Угадал!':t<=0?`Проигрыш: ${n}`:(v<n?'Больше':'Меньше')+` | осталось ${t}`};
 }
 
 function memory() {
-  const pairs={easy:6,medium:8,hard:10}[difficulty.value];
-  const all=['🍎','🌟','🎈','🐬','🍀','🚲','🎵','🦋','⚽','🧩','🎯','🌈'];
+  const pairs={easy:6,medium:8,hard:10}[difficulty.value]; const all=['🍎','🌟','🎈','🐬','🍀','🚲','🎵','🦋','⚽','🧩','🎯','🌈'];
   const d=[...all.slice(0,pairs),...all.slice(0,pairs)].sort(()=>Math.random()-0.5).map(v=>({v,o:false,d:false}));
   let first=-1, lock=false, player=true, ps=0, bs=0;
   area.innerHTML='<div id="mb" class="memory-board"></div><p id="m"></p>';
-  const mb=document.getElementById('mb');
-  mb.style.setProperty('--cols', String(Math.ceil(Math.sqrt(d.length))));
-  const m=document.getElementById('m');
+  const mb=document.getElementById('mb'); mb.style.setProperty('--cols', String(Math.ceil(Math.sqrt(d.length)))); const m=document.getElementById('m');
   const status=()=>m.textContent=`${player?'Твой':'Бота'} ход | Ты ${ps} : ${bs} Бот`;
   const render=()=>{mb.innerHTML='';d.forEach((c,i)=>{const b=document.createElement('button');b.className='memory-card';b.disabled=c.d||lock||!player;b.textContent=(c.o||c.d)?c.v:'❔';b.onclick=()=>open(i);mb.append(b)});status();};
   const done=()=>d.every(x=>x.d);
