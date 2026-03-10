@@ -18,13 +18,18 @@ sections.forEach(([id, title]) => {
   const b = document.createElement('button');
   b.textContent = title;
   b.onclick = () => show(id);
-  menu.append(b);
+  appendIfExists(menu, b);
 });
 
 function show(id) {
   document.querySelectorAll('.panel').forEach((p) => p.classList.add('hidden'));
   const panel = document.getElementById(`${id}Panel`);
   if (panel) panel.classList.remove('hidden');
+}
+
+
+function appendIfExists(parent, child) {
+  if (parent && child) parent.append(child);
 }
 
 const themeToggle = document.getElementById('themeToggle');
@@ -51,22 +56,22 @@ const RUTUBE_VIDEOS = [
 ];
 
 (async function initMedia() {
-  const manifest = await fetchJson('/media-manifest.json').catch(() => ({ music: [], photos: [] }));
+  const manifest = await fetchJson('./media-manifest.json').catch(() => ({ music: [], photos: [] }));
 
   const player = document.getElementById('musicPlayer');
   const list = document.getElementById('musicList');
   manifest.music.forEach((m) => {
     const b = document.createElement('button');
     b.textContent = m;
-    b.onclick = () => { player.src = m; player.play(); };
-    list.append(b);
+    b.onclick = () => { if (!player) return; player.src = m; player.play(); };
+    appendIfExists(list, b);
   });
 
   const feed = document.getElementById('photoFeed');
   manifest.photos.forEach((p) => {
     const fig = document.createElement('figure');
     fig.innerHTML = `<img src="${p}" alt="photo"/><figcaption>${p}</figcaption>`;
-    feed.append(fig);
+    appendIfExists(feed, fig);
   });
 
   const vlist = document.getElementById('rutubeList');
@@ -74,34 +79,42 @@ const RUTUBE_VIDEOS = [
   RUTUBE_VIDEOS.forEach((v, i) => {
     const b = document.createElement('button');
     b.textContent = v.title;
-    b.onclick = () => frame.src = v.embed;
-    vlist.append(b);
-    if (i === 0) frame.src = v.embed;
+    b.onclick = () => { if (frame) frame.src = v.embed; };
+    appendIfExists(vlist, b);
+    if (i === 0 && frame) frame.src = v.embed;
   });
 })();
 
-const AI_BACKEND_URL = window.AI_BACKEND_URL || 'http://localhost:8001';
+const AI_BACKEND_URL = window.AI_BACKEND_URL || ''; // empty means same origin
 const chatLog = document.getElementById('chatLog');
 function addMsg(text, cls) {
   const d = document.createElement('div');
   d.className = `msg ${cls}`;
   d.textContent = text;
-  chatLog.append(d);
-  chatLog.scrollTop = chatLog.scrollHeight;
+  appendIfExists(chatLog, d);
+  if (chatLog) chatLog.scrollTop = chatLog.scrollHeight;
 }
-addMsg('Привет! Я рядом 🌿', 'bot');
+if (chatLog) addMsg('Привет! Я рядом 🌿', 'bot');
 
-document.getElementById('chatForm').onsubmit = async (e) => {
+const chatForm = document.getElementById('chatForm');
+if (chatForm) {
+chatForm.onsubmit = async (e) => {
   e.preventDefault();
   const input = document.getElementById('chatInput');
-  const text = input.value.trim();
+  const text = input ? input.value.trim() : '';
   if (!text) return;
   addMsg(text, 'user');
   input.value = '';
-  const r = await fetch(`${AI_BACKEND_URL}/api/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
-  const data = await r.json();
-  addMsg(data.reply || 'Ошибка', 'bot');
+  const chatUrl = `${AI_BACKEND_URL}/api/chat`;
+  try {
+    const r = await fetch(chatUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
+    const data = await r.json();
+    addMsg(data.reply || 'Ошибка', 'bot');
+  } catch (err) {
+    addMsg('Сервер чата недоступен. Проверьте AI_BACKEND_URL или доступность /api/chat.', 'bot');
+  }
 };
+}
 
 const difficulty = document.getElementById('difficulty');
 const tabs = document.getElementById('puzzleTabs');
@@ -119,13 +132,14 @@ Object.keys(games).forEach((name) => {
   const b = document.createElement('button');
   b.textContent = name;
   b.onclick = () => { current = name; games[current](); };
-  tabs.append(b);
+  appendIfExists(tabs, b);
 });
 
-document.getElementById('newGame').onclick = () => games[current]();
-difficulty.onchange = () => games[current]();
+const newGameBtn = document.getElementById('newGame');
+if (newGameBtn) newGameBtn.onclick = () => games[current]();
+if (difficulty) difficulty.onchange = () => games[current]();
 
-games[current]();
+if (tabs && area && difficulty) games[current]();
 
 function tic() {
   const b = Array(9).fill('');
