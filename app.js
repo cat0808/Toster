@@ -1,3 +1,4 @@
+document.addEventListener('DOMContentLoaded', () => {
 const sections = [
   ['puzzles', '🧩 Головоломки'],
   ['music', '🎵 Музыка'],
@@ -6,7 +7,13 @@ const sections = [
   ['chat', '💬 ИИ психолог']
 ];
 
-const menu = document.getElementById('menu');
+let menu = document.getElementById('menu');
+if (!menu) {
+  menu = document.createElement('nav');
+  menu.id = 'menu';
+  menu.className = 'menu';
+  document.body.prepend(menu);
+}
 sections.forEach(([id, title]) => {
   const b = document.createElement('button');
   b.textContent = title;
@@ -16,18 +23,21 @@ sections.forEach(([id, title]) => {
 
 function show(id) {
   document.querySelectorAll('.panel').forEach((p) => p.classList.add('hidden'));
-  document.getElementById(`${id}Panel`).classList.remove('hidden');
+  const panel = document.getElementById(`${id}Panel`);
+  if (panel) panel.classList.remove('hidden');
 }
 
 const themeToggle = document.getElementById('themeToggle');
 document.body.dataset.theme = localStorage.getItem('theme') || 'dark';
-function syncThemeBtn() { themeToggle.textContent = document.body.dataset.theme === 'light' ? '☀️ Дневная' : '🌙 Ночная'; }
+function syncThemeBtn() { if (themeToggle) themeToggle.textContent = document.body.dataset.theme === 'light' ? '☀️ Дневная' : '🌙 Ночная'; }
 syncThemeBtn();
-themeToggle.onclick = () => {
-  document.body.dataset.theme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
-  localStorage.setItem('theme', document.body.dataset.theme);
-  syncThemeBtn();
-};
+if (themeToggle) {
+  themeToggle.onclick = () => {
+    document.body.dataset.theme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('theme', document.body.dataset.theme);
+    syncThemeBtn();
+  };
+}
 
 async function fetchJson(url) {
   const r = await fetch(url);
@@ -169,3 +179,5 @@ function memory() {
   const bot=()=>{const ids=d.map((c,i)=>!c.d&&!c.o?i:null).filter(i=>i!==null); if(ids.length<2) return; const a=ids[Math.floor(Math.random()*ids.length)]; const rest=ids.filter(x=>x!==a); const b=rest[Math.floor(Math.random()*rest.length)]; d[a].o=true; d[b].o=true; render(); resolve(a,b);};
   render();
 }
+
+});
