@@ -59,15 +59,20 @@ document.addEventListener('DOMContentLoaded', () => {
   (async function initMedia() {
     const manifest = await fetchJson('./media-manifest.json').catch(() => ({ music: [], photos: [] }));
 
-    const player = document.getElementById('musicPlayer');
+    const player = new Audio();
     const list = document.getElementById('musicList');
+    const now = document.getElementById('musicNow');
     (manifest.music || []).forEach((m) => {
       const b = document.createElement('button');
       b.textContent = m;
-      b.onclick = () => {
-        if (!player) return;
+      b.onclick = async () => {
         player.src = m;
-        player.play();
+        try {
+          await player.play();
+          if (now) now.textContent = `Сейчас играет: ${m}`;
+        } catch (_) {
+          if (now) now.textContent = `Не удалось запустить: ${m}`;
+        }
       };
       appendIfExists(list, b);
     });
