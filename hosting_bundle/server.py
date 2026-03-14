@@ -57,24 +57,41 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         self.end_headers()
 
+    def do_GET(self):
+        if self.path in ('/healthz', '/health'):
+            return self._send_json(200, {'ok': True})
+        if self.path == '/favicon.ico':
+            self.send_response(204)
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            return
+        return self._send_json(404, {'error': 'Not found'})
+
     def do_POST(self):
-        if self.path != '/api/chat':
-            return self._send_json(404, {'error': 'Not found'})
+        try:
+            if self.path != '/api/chat':
+                return self._send_json(404, {'error': 'Not found'})
 
-        if not _is_authorized(self.headers):
-            return self._send_json(401, {'error': 'Unauthorized. Invalid Authorization Key.'})
+            if not _is_authorized(self.headers):
+                return self._send_json(401, {'error': 'Unauthorized. Invalid Authorization Key.'})
 
-        length = int(self.headers.get('Content-Length', '0'))
-        raw = self.rfile.read(length) if length else b'{}'
-        body = json.loads(raw.decode('utf-8'))
-        message = str(body.get('message', '')).strip()
+            length = int(self.headers.get('Content-Length', '0'))
+            raw = self.rfile.read(length) if length else b'{}'
+            try:
+                body = json.loads(raw.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return self._send_json(400, {'error': 'Некорректный JSON.'})
 
-        if not message:
-            return self._send_json(400, {'error': 'Введите сообщение.'})
-        if _contains_bad_words(message):
-            return self._send_json(200, {'reply': 'Пожалуйста, переформулируй без грубых слов 💙'})
+            message = str(body.get('message', '')).strip()
 
-        return self._send_json(200, {'reply': _fallback_reply(message), 'source': 'local-fallback'})
+            if not message:
+                return self._send_json(400, {'error': 'Введите сообщение.'})
+            if _contains_bad_words(message):
+                return self._send_json(200, {'reply': 'Пожалуйста, переформулируй без грубых слов 💙'})
+
+            return self._send_json(200, {'reply': _fallback_reply(message), 'source': 'local-fallback'})
+        except Exception as e:
+            return self._send_json(500, {'error': f'Internal server error: {e}'})
 
 
 if __name__ == '__main__':
