@@ -64,3 +64,58 @@ AUTHORIZATION_KEY=your_secret_key
 { title: 'Название видео', embed: 'https://rutube.ru/play/embed/<ID>/' }
 ```
 5. Сохраните `app.js` и обновите страницу — новая кнопка появится в блоке «🎬 Видео».
+
+
+## 5) Деплой на REG.RU
+
+Ниже два рабочих сценария.
+
+### Вариант A: только статический сайт (без ИИ)
+1. В панели REG.RU откройте файловый менеджер сайта (обычно папка `public_html`).
+2. Загрузите туда содержимое `hosting_bundle/`: `index.html`, `app.js`, `styles.css`, `media-manifest.json` и ваши медиа-файлы.
+3. В `media-manifest.json` укажите реальные пути к музыке и картинкам.
+4. Откройте домен и проверьте разделы «Музыка», «Картинки», «Видео», «Головоломки».
+
+### Вариант B: сайт + Python ИИ backend
+Рекомендуется VPS на REG.RU (Ubuntu 22.04+).
+
+1. Скопируйте папку `hosting_bundle/` на сервер, например в `/opt/ostrovok`.
+2. Создайте `.env` из примера и заполните ключи:
+```bash
+cd /opt/ostrovok
+cp .env.example .env
+```
+3. Запустите backend:
+```bash
+python3 server.py
+```
+По умолчанию backend будет на `http://127.0.0.1:8001`.
+
+4. Прокиньте backend через Nginx на HTTPS-домен, например `https://ai.your-domain.ru`.
+Пример location:
+```nginx
+location /api/ {
+    proxy_pass http://127.0.0.1:8001/api/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+```
+
+5. На фронте пропишите адрес backend:
+```html
+<script>
+  window.AI_BACKEND_URL = "https://ai.your-domain.ru";
+  window.AUTHORIZATION_KEY = "your_secret_key";
+</script>
+```
+
+6. Проверьте запрос к ИИ на сервере:
+```bash
+curl -X POST https://ai.your-domain.ru/api/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your_secret_key" \
+  -d '{"message":"привет"}'
+```
+
+> Для production на REG.RU используйте HTTPS (Let's Encrypt) и не храните секретные ключи в публичном репозитории.
