@@ -124,8 +124,16 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   const AI_BACKEND_URL = (window.AI_BACKEND_URL || '').trim();
-  const AUTHORIZATION_KEY = (window.AUTHORIZATION_KEY || '').replace(/^Bearer\s+/i, '').trim();
   const chatLog = document.getElementById('chatLog');
+  const authKeyInput = document.getElementById('authKeyInput');
+  const saveAuthKeyBtn = document.getElementById('saveAuthKey');
+  const storedAuthKey = (localStorage.getItem('auth_key') || '').replace(/^Bearer\s+/i, '').trim();
+  if (authKeyInput) authKeyInput.value = storedAuthKey;
+  if (saveAuthKeyBtn && authKeyInput) {
+    saveAuthKeyBtn.onclick = () => {
+      localStorage.setItem('auth_key', authKeyInput.value.replace(/^Bearer\s+/i, '').trim());
+    };
+  }
 
   function addMsg(text, cls) {
     const d = document.createElement('div');
@@ -150,8 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const base = AI_BACKEND_URL.replace(/\/$/, '');
       const chatUrl = `${base}/api/chat`; // base can be '' -> /api/chat
       try {
-        const headers = { 'Content-Type': 'application/json' };
-        if (AUTHORIZATION_KEY) headers.Authorization = `Bearer ${AUTHORIZATION_KEY}`;
+        const key = ((authKeyInput && authKeyInput.value) || localStorage.getItem('auth_key') || '').replace(/^Bearer\s+/i, '').trim();
+        if (!key) {
+          addMsg('Введите Authorization Key перед отправкой сообщения.', 'bot');
+          return;
+        }
+        const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` };
         const r = await fetch(chatUrl, {
           method: 'POST',
           headers,
@@ -159,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await r.json();
         if (!r.ok) {
-          addMsg(data.error || 'Ошибка доступа к чату.', 'bot');
+          addMsg(data.error || 'Ошибка Authorization Key или доступа к чату.', 'bot');
           return;
         }
         addMsg(data.reply || 'Ошибка', 'bot');

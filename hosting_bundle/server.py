@@ -1,23 +1,13 @@
 import json
 import os
-import uuid
-import base64
-from urllib import request, parse
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', '8001'))
 
-GIGACHAT_CLIENT_ID = os.getenv('GIGACHAT_CLIENT_ID', '')
-GIGACHAT_CLIENT_SECRET = os.getenv('GIGACHAT_CLIENT_SECRET', '')
-GIGACHAT_SCOPE = os.getenv('GIGACHAT_SCOPE', 'GIGACHAT_API_PERS')
-GIGACHAT_MODEL = os.getenv('GIGACHAT_MODEL', 'GigaChat')
-GIGACHAT_AUTH_URL = os.getenv('GIGACHAT_AUTH_URL', 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth')
-GIGACHAT_API_URL = os.getenv('GIGACHAT_API_URL', 'https://gigachat.devices.sberbank.ru/api/v1/chat/completions')
 AUTHORIZATION_KEY = os.getenv('AUTHORIZATION_KEY', '')
 
 BAD_WORDS = ['бляд', 'сука', 'хер', 'пизд', 'еб', 'нах', 'мраз', 'долбо', 'fuck', 'shit']
-TOKEN = {'value': None, 'exp': 0}
 
 
 def _json_bytes(data):
@@ -40,7 +30,7 @@ def _fallback_reply(msg: str) -> str:
 
 def _is_authorized(headers) -> bool:
     if not AUTHORIZATION_KEY:
-        return True
+        return False
     auth = headers.get('Authorization', '').strip()
     if not auth:
         return False
@@ -48,53 +38,6 @@ def _is_authorized(headers) -> bool:
     expected = AUTHORIZATION_KEY.replace('Bearer ', '', 1).strip()
     return token == expected
 
-
-def _fetch_token():
-    if not GIGACHAT_CLIENT_ID or not GIGACHAT_CLIENT_SECRET:
-        raise RuntimeError('No GigaChat credentials')
-
-    import time
-    if TOKEN['value'] and time.time() < TOKEN['exp'] - 30:
-        return TOKEN['value']
-
-    basic = base64.b64encode(f'{GIGACHAT_CLIENT_ID}:{GIGACHAT_CLIENT_SECRET}'.encode()).decode()
-    body = parse.urlencode({'scope': GIGACHAT_SCOPE}).encode()
-    req = request.Request(
-        GIGACHAT_AUTH_URL,
-        data=body,
-        method='POST',
-        headers={
-            'Authorization': f'Basic {basic}',
-            'RqUID': str(uuid.uuid4()),
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-    )
-    with request.urlopen(req, timeout=20) as resp:
-        data = json.loads(resp.read().decode())
-    TOKEN['value'] = data['access_token']
-    TOKEN['exp'] = time.time() + int(data.get('expires_in', 1800))
-    return TOKEN['value']
-
-
-def _ask_gigachat(message: str) -> str:
-    token = _fetch_token()
-    payload = {
-        'model': GIGACHAT_MODEL,
-        'temperature': 0.7,
-        'messages': [
-            {'role': 'system', 'content': 'Ты доброжелательный школьный психолог. Отвечай кратко и поддерживающе.'},
-            {'role': 'user', 'content': message},
-        ],
-    }
-    req = request.Request(
-        GIGACHAT_API_URL,
-        data=_json_bytes(payload),
-        method='POST',
-        headers={'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'},
-    )
-    with request.urlopen(req, timeout=25) as resp:
-        data = json.loads(resp.read().decode())
-    return data.get('choices', [{}])[0].get('message', {}).get('content', 'Я рядом и готов помочь.')
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -131,14 +74,11 @@ class Handler(BaseHTTPRequestHandler):
         if _contains_bad_words(message):
             return self._send_json(200, {'reply': 'Пожалуйста, переформулируй без грубых слов 💙'})
 
-        try:
-            if GIGACHAT_CLIENT_ID and GIGACHAT_CLIENT_SECRET:
-                return self._send_json(200, {'reply': _ask_gigachat(message), 'source': 'gigachat'})
-            return self._send_json(200, {'reply': _fallback_reply(message), 'source': 'local-fallback'})
-        except Exception as e:
-            return self._send_json(200, {'reply': _fallback_reply(message), 'source': 'local-fallback', 'note': f'gigachat_error: {e}'})
+        return self._send_json(200, {'reply': _fallback_reply(message), 'source': 'local-fallback'})
 
 
 if __name__ == '__main__':
+    if not AUTHORIZATION_KEY:
+        raise RuntimeError('Set AUTHORIZATION_KEY in environment before starting server.')
     print(f'AI backend: http://{HOST}:{PORT}')
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

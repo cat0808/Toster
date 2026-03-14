@@ -6,7 +6,7 @@
 - `styles.css`
 - `media-manifest.json`
 - `.env.example`
-- `server.py` (ТОЛЬКО ИИ backend `/api/chat`)
+- `server.py` (ТОЛЬКО ИИ backend `/api/chat`, вход по Authorization Key)
 
 ## 1) Хостинг сайта
 Разместите `index.html`, `app.js`, `styles.css`, `media-manifest.json` на статическом хостинге.
@@ -22,7 +22,7 @@
 Файлы должны лежать рядом с сайтом (в той же корневой директории хостинга или по указанным URL).
 Плеер в интерфейсе запускается по кнопке трека и показывает «Сейчас играет», без отдельной чёрной панели контролов.
 
-## 3) ИИ на Python (только API чата)
+## 3) ИИ на Python (только API чата, без GigaChat)
 ```bash
 cp .env.example .env
 python3 server.py
@@ -33,19 +33,10 @@ python3 server.py
 - В `.env` задайте:
 ```bash
 AUTHORIZATION_KEY=your_secret_key
-# можно и так:
-# AUTHORIZATION_KEY=Bearer your_secret_key
 ```
-- На фронтенде перед `app.js` передайте ключ:
-```html
-<script>
-  window.AI_BACKEND_URL = "https://your-ai-host.example";
-  window.AUTHORIZATION_KEY = "your_secret_key";
-</script>
-```
-- Тогда запросы к `/api/chat` будут идти с заголовком:
+- На сайте в разделе чата введите этот ключ в поле **Authorization Key** и нажмите «Сохранить ключ».
+- После этого сообщения в чат идут с заголовком:
 `Authorization: Bearer <ключ>`.
-Сервер также принимает вариант без префикса `Bearer` для совместимости.
 
 При необходимости на странице можно переопределить адрес ИИ:
 ```html
