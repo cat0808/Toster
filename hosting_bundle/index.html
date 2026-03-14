@@ -32,7 +32,7 @@
     </section>
 
     <section id="musicPanel" class="panel hidden">
-      <h2>🎵 Музыка (файлы из корня)</h2>
+      <h2>🎵 Музыка</h2>
       <div id="musicList" class="list"></div>
       <audio id="musicPlayer" controls></audio>
     </section>
@@ -44,12 +44,12 @@
     </section>
 
     <section id="photosPanel" class="panel hidden">
-      <h2>🖼 Картинки (можно листать вниз)</h2>
+      <h2>🖼 Картинки</h2>
       <div id="photoFeed" class="photo-feed"></div>
     </section>
 
     <section id="chatPanel" class="panel hidden">
-      <h2>💬 ИИ психолог (Python backend)</h2>
+      <h2>💬 ИИ психолог</h2>
       <div id="chatLog" class="chat-log"></div>
       <form id="chatForm" class="row">
         <input id="chatInput" placeholder="Напиши, что тебя беспокоит..." />
@@ -58,7 +58,10 @@
     </section>
   </main>
 
-  <script>window.AI_BACKEND_URL = window.AI_BACKEND_URL || "";</script>
+  <script>
+    window.AI_BACKEND_URL = window.AI_BACKEND_URL || "";
+    window.AUTHORIZATION_KEY = window.AUTHORIZATION_KEY || "";
+  </script>
   <script src="./app.js"></script>
 </body>
 </html>

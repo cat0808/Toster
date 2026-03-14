@@ -28,10 +28,35 @@ python3 server.py
 ```
 По умолчанию: `http://localhost:8001/api/chat`
 
-При необходимости на странице можно переопределить адрес:
+### Authorization Key для ИИ
+- В `.env` задайте:
+```bash
+AUTHORIZATION_KEY=your_secret_key
+```
+- На фронтенде перед `app.js` передайте ключ:
+```html
+<script>
+  window.AI_BACKEND_URL = "https://your-ai-host.example";
+  window.AUTHORIZATION_KEY = "your_secret_key";
+</script>
+```
+- Тогда запросы к `/api/chat` будут идти с заголовком:
+`Authorization: Bearer <ключ>`.
+
+При необходимости на странице можно переопределить адрес ИИ:
 ```html
 <script>window.AI_BACKEND_URL = "https://your-ai-host.example";</script>
 ```
 
 ## 4) Видео
 Видео встроены с Rutube (iframe), локальные видеофайлы не нужны.
+
+### Как добавить новые видео с Rutube
+1. Откройте нужное видео на Rutube.
+2. Нажмите «Поделиться» → «Код для вставки».
+3. Возьмите URL вида `https://rutube.ru/play/embed/<ID>/`.
+4. Добавьте его в массив `RUTUBE_VIDEOS` в `app.js` в формате:
+```js
+{ title: 'Название видео', embed: 'https://rutube.ru/play/embed/<ID>/' }
+```
+5. Сохраните `app.js` и обновите страницу — новая кнопка появится в блоке «🎬 Видео».

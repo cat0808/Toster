@@ -1,27 +1,64 @@
-:root{--bg:#0b1020;--panel:#131b34;--text:#e6ecff;--muted:#9fb0dd;--accent:#4cc9f0;--line:#2a3766}
-body[data-theme='light']{--bg:#f4f7ff;--panel:#ffffff;--text:#17203a;--muted:#55638b;--accent:#2563eb;--line:#d8def2}
+:root{
+  --bg:#0b1020;
+  --bg2:#0f172a;
+  --panel:#131b34;
+  --text:#e6ecff;
+  --muted:#9fb0dd;
+  --accent:#4cc9f0;
+  --line:#2a3766;
+}
+
+body[data-theme='light']{
+  --bg:#f6f8ff;
+  --bg2:#e9efff;
+  --panel:#ffffff;
+  --text:#1b2a4a;
+  --muted:#4f5f86;
+  --accent:#2c64ff;
+  --line:#c9d6ff;
+}
+
 *{box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
-body{margin:0;background:linear-gradient(180deg,var(--bg),#0f172a);color:var(--text)}
+body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);min-height:100vh}
 .top{display:flex;justify-content:space-between;align-items:center;padding:16px 20px}
 #themeToggle{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text)}
 .menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;padding:0 20px 10px}
 .menu button,.tabs button,.row button,.list button{padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer}
 main{padding:0 20px 20px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
 .hidden{display:none}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-#musicPlayer,#rutubeFrame{width:100%;margin-top:12px;border-radius:12px;min-height:360px;background:#000}
+
+#musicPlayer{width:100%;margin-top:12px;border-radius:12px;min-height:auto;background:transparent}
+#rutubeFrame{width:100%;margin-top:12px;border-radius:12px;min-height:360px;background:#000;border:1px solid var(--line)}
+
 .list{display:grid;gap:8px;max-height:220px;overflow:auto}
-.photo-feed{display:grid;gap:14px;max-height:65vh;overflow:auto;padding-right:6px}
-.photo-feed figure{margin:0}
-.photo-feed img{width:100%;max-height:360px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
-.photo-feed figcaption{color:var(--muted);margin-top:6px}
-.chat-log{height:280px;overflow:auto;background:rgba(0,0,0,.15);border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:10px}
+.photo-feed{display:grid;gap:16px;max-height:72vh;overflow:auto;padding-right:6px}
+.photo-feed figure{margin:0;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:10px}
+.photo-feed img{
+  width:100%;
+  max-height:460px;
+  object-fit:contain;
+  image-rendering:auto;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:#0a0f1f;
+}
+body[data-theme='light'] .photo-feed img{background:#f7f9ff}
+.photo-feed figcaption{color:var(--muted);margin-top:8px;word-break:break-all}
+
+.chat-log{height:280px;overflow:auto;background:rgba(0,0,0,.12);border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:10px}
+body[data-theme='light'] .chat-log{background:rgba(44,100,255,.08)}
 .msg{padding:8px 10px;border-radius:10px;margin:6px 0;max-width:85%}
-.user{margin-left:auto;background:#164e63}.bot{background:#1f2a4d}
+.user{margin-left:auto;background:#0b7285;color:#e8fbff}
+.bot{background:#1f2a4d}
+body[data-theme='light'] .bot{background:#dbe6ff;color:#17315f}
 #chatInput{flex:1;min-width:220px;padding:10px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--text)}
-.board{display:grid;grid-template-columns:repeat(3,68px);gap:6px}
-.cell{width:68px;height:68px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:26px}
+
+.board{display:grid;grid-template-columns:repeat(3,74px);gap:8px}
+.cell{width:74px;height:74px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:28px;font-weight:700}
 .memory-board{--cols:4;display:grid;grid-template-columns:repeat(var(--cols),minmax(54px,1fr));gap:8px;max-width:760px}
 .memory-card{aspect-ratio:1/1;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:22px}
+
+#puzzleArea p{margin:8px 0 12px;color:var(--muted)}

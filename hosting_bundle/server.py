@@ -14,6 +14,7 @@ GIGACHAT_SCOPE = os.getenv('GIGACHAT_SCOPE', 'GIGACHAT_API_PERS')
 GIGACHAT_MODEL = os.getenv('GIGACHAT_MODEL', 'GigaChat')
 GIGACHAT_AUTH_URL = os.getenv('GIGACHAT_AUTH_URL', 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth')
 GIGACHAT_API_URL = os.getenv('GIGACHAT_API_URL', 'https://gigachat.devices.sberbank.ru/api/v1/chat/completions')
+AUTHORIZATION_KEY = os.getenv('AUTHORIZATION_KEY', '')
 
 BAD_WORDS = ['бляд', 'сука', 'хер', 'пизд', 'еб', 'нах', 'мраз', 'долбо', 'fuck', 'shit']
 TOKEN = {'value': None, 'exp': 0}
@@ -35,6 +36,16 @@ def _fallback_reply(msg: str) -> str:
     if 'ссор' in t or 'конфликт' in t:
         return 'Конфликты тяжело переживаются. Попробуй сказать: «Мне неприятно, когда...». Могу помочь подобрать слова.'
     return 'Я рядом и готов поддержать. Расскажи, что произошло и что ты сейчас чувствуешь.'
+
+
+def _is_authorized(headers) -> bool:
+    if not AUTHORIZATION_KEY:
+        return True
+    auth = headers.get('Authorization', '')
+    if not auth.startswith('Bearer '):
+        return False
+    token = auth.replace('Bearer ', '', 1).strip()
+    return token == AUTHORIZATION_KEY
 
 
 def _fetch_token():
@@ -99,12 +110,15 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(204)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'POST,OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         self.end_headers()
 
     def do_POST(self):
         if self.path != '/api/chat':
             return self._send_json(404, {'error': 'Not found'})
+
+        if not _is_authorized(self.headers):
+            return self._send_json(401, {'error': 'Unauthorized. Invalid Authorization Key.'})
 
         length = int(self.headers.get('Content-Length', '0'))
         raw = self.rfile.read(length) if length else b'{}'
