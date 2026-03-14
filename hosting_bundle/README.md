@@ -6,7 +6,7 @@
 - `styles.css`
 - `media-manifest.json`
 - `.env.example`
-- `server.py` (ТОЛЬКО ИИ backend `/api/chat`, вход по Authorization Key)
+- `server.py` (ТОЛЬКО ИИ backend `/api/chat`, один Authorization Key в venv/.env)
 
 ## 1) Хостинг сайта
 Разместите `index.html`, `app.js`, `styles.css`, `media-manifest.json` на статическом хостинге.
@@ -32,11 +32,16 @@ python3 server.py
 ### Authorization Key для ИИ
 - В `.env` задайте:
 ```bash
-AUTHORIZATION_KEY=your_secret_key
+AUTHORIZATION_KEY=1
 ```
-- На сайте в разделе чата введите этот ключ в поле **Authorization Key** и нажмите «Сохранить ключ».
-- После этого сообщения в чат идут с заголовком:
-`Authorization: Bearer <ключ>`.
+- Ключ хранится один раз в окружении backend (venv/.env на хостинге).
+- На фронте задайте тот же ключ в конфиге страницы (один раз):
+```html
+<script>
+  window.AUTHORIZATION_KEY = "1";
+</script>
+```
+- После этого чат отправляет `Authorization: Bearer <ключ>` автоматически (без ввода пользователем).
 
 При необходимости на странице можно переопределить адрес ИИ:
 ```html

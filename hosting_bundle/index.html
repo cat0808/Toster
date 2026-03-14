@@ -51,10 +51,6 @@
 
     <section id="chatPanel" class="panel hidden">
       <h2>💬 ИИ психолог</h2>
-      <div class="row">
-        <input id="authKeyInput" placeholder="Authorization Key" />
-        <button id="saveAuthKey" type="button">Сохранить ключ</button>
-      </div>
       <div id="chatLog" class="chat-log"></div>
       <form id="chatForm" class="row">
         <input id="chatInput" placeholder="Напиши, что тебя беспокоит..." />
@@ -65,6 +61,7 @@
 
   <script>
     window.AI_BACKEND_URL = window.AI_BACKEND_URL || "";
+    window.AUTHORIZATION_KEY = window.AUTHORIZATION_KEY || "1";
   </script>
   <script src="./app.js"></script>
 </body>

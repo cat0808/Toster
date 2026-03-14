@@ -124,16 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   const AI_BACKEND_URL = (window.AI_BACKEND_URL || '').trim();
+  const AUTHORIZATION_KEY = (window.AUTHORIZATION_KEY || '1').replace(/^Bearer\s+/i, '').trim();
   const chatLog = document.getElementById('chatLog');
-  const authKeyInput = document.getElementById('authKeyInput');
-  const saveAuthKeyBtn = document.getElementById('saveAuthKey');
-  const storedAuthKey = (localStorage.getItem('auth_key') || '').replace(/^Bearer\s+/i, '').trim();
-  if (authKeyInput) authKeyInput.value = storedAuthKey;
-  if (saveAuthKeyBtn && authKeyInput) {
-    saveAuthKeyBtn.onclick = () => {
-      localStorage.setItem('auth_key', authKeyInput.value.replace(/^Bearer\s+/i, '').trim());
-    };
-  }
 
   function addMsg(text, cls) {
     const d = document.createElement('div');
@@ -158,12 +150,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const base = AI_BACKEND_URL.replace(/\/$/, '');
       const chatUrl = `${base}/api/chat`; // base can be '' -> /api/chat
       try {
-        const key = ((authKeyInput && authKeyInput.value) || localStorage.getItem('auth_key') || '').replace(/^Bearer\s+/i, '').trim();
-        if (!key) {
-          addMsg('Введите Authorization Key перед отправкой сообщения.', 'bot');
+        if (!AUTHORIZATION_KEY) {
+          addMsg('Не задан Authorization Key в конфигурации сайта.', 'bot');
           return;
         }
-        const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` };
+        const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${AUTHORIZATION_KEY}` };
         const r = await fetch(chatUrl, {
           method: 'POST',
           headers,
