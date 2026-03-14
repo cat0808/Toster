@@ -58,9 +58,11 @@ AUTHORIZATION_KEY=your_secret_key
 ### Как добавить новые видео с Rutube
 1. Откройте нужное видео на Rutube.
 2. Нажмите «Поделиться» → «Код для вставки».
-3. Возьмите URL вида `https://rutube.ru/play/embed/<ID>/`.
+3. Возьмите ссылку на видео вида `https://rutube.ru/video/<ID>/` или embed-ссылку `https://rutube.ru/play/embed/<ID>/`.
 4. Добавьте его в массив `RUTUBE_VIDEOS` в `app.js` в формате:
 ```js
+{ title: 'Название видео', url: 'https://rutube.ru/video/<ID>/' }
+// или
 { title: 'Название видео', embed: 'https://rutube.ru/play/embed/<ID>/' }
 ```
 5. Сохраните `app.js` и обновите страницу — новая кнопка появится в блоке «🎬 Видео».
@@ -119,3 +121,7 @@ curl -X POST https://ai.your-domain.ru/api/chat \
 ```
 
 > Для production на REG.RU используйте HTTPS (Let's Encrypt) и не храните секретные ключи в публичном репозитории.
+
+
+> Важно: для iframe используйте только `.../play/embed/...` (или обычный `.../video/...`, который автоматически конвертируется).
+> Ссылки на главную/канал Rutube часто блокируются заголовком X-Frame-Options и не откроются во фрейме.

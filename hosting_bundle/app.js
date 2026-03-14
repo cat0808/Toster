@@ -50,9 +50,27 @@ document.addEventListener('DOMContentLoaded', () => {
     return r.json();
   }
 
+
+  function toRutubeEmbedUrl(value) {
+    if (!value || typeof value !== 'string') return null;
+    const src = value.trim();
+    if (!src) return null;
+
+    // already embed URL
+    if (/^https:\/\/rutube\.ru\/play\/embed\/[a-zA-Z0-9]+\/?$/i.test(src)) return src;
+
+    // normal video URL => convert to embed
+    const m = src.match(/^https:\/\/rutube\.ru\/video\/([a-zA-Z0-9]+)\/?$/i);
+    if (m) return `https://rutube.ru/play/embed/${m[1]}/`;
+
+    // raw id fallback
+    if (/^[a-zA-Z0-9]{16,}$/.test(src)) return `https://rutube.ru/play/embed/${src}/`;
+    return null;
+  }
+
   const RUTUBE_VIDEOS = [
-    { title: 'Спокойная музыка и природа', embed: 'https://rutube.ru/play/embed/5f3b6fbe9b2b2ba44ca6203f7af579a3/' },
-    { title: 'Расслабляющее видео для отдыха', embed: 'https://rutube.ru/play/embed/6a4d1f7c01f43084f0ddf7d77be66ef4/' },
+    { title: 'Спокойная музыка и природа', url: 'https://rutube.ru/video/5f3b6fbe9b2b2ba44ca6203f7af579a3/' },
+    { title: 'Расслабляющее видео для отдыха', url: 'https://rutube.ru/video/6a4d1f7c01f43084f0ddf7d77be66ef4/' },
     { title: 'Мотивационное видео для школьников', embed: 'https://rutube.ru/play/embed/8ad0f4e6df4e73f6efd6a838f438e2d5/' }
   ];
 
@@ -86,7 +104,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const vlist = document.getElementById('rutubeList');
     const frame = document.getElementById('rutubeFrame');
-    RUTUBE_VIDEOS.forEach((v, i) => {
+    const validVideos = RUTUBE_VIDEOS
+      .map((v) => ({ title: v.title, embed: toRutubeEmbedUrl(v.embed || v.url || '') }))
+      .filter((v) => v.embed);
+
+    if (!validVideos.length && vlist) {
+      vlist.textContent = 'Нет корректных Rutube-ссылок (нужен формат /video/<id>/ или /play/embed/<id>/).';
+    }
+
+    validVideos.forEach((v, i) => {
       const b = document.createElement('button');
       b.textContent = v.title;
       b.onclick = () => {
