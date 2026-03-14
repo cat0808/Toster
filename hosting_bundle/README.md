@@ -32,13 +32,13 @@ python3 server.py
 ### Authorization Key для ИИ
 - В `.env` задайте:
 ```bash
-AUTHORIZATION_KEY=1
+AUTHORIZATION_KEY=MDE5YmZhNWQtZmFiOC03NmY5LWFjMjgtYzgzM2QxZmZiZmIxOmIzMTc3ZTgyLTYyMmQtNDQ2ZS1iNTY3LWJhNTJkZmY1NWJlYQ==
 ```
 - Ключ хранится один раз в окружении backend (venv/.env на хостинге).
 - На фронте задайте тот же ключ в конфиге страницы (один раз):
 ```html
 <script>
-  window.AUTHORIZATION_KEY = "1";
+  window.AUTHORIZATION_KEY = "MDE5YmZhNWQtZmFiOC03NmY5LWFjMjgtYzgzM2QxZmZiZmIxOmIzMTc3ZTgyLTYyMmQtNDQ2ZS1iNTY3LWJhNTJkZmY1NWJlYQ==";
 </script>
 ```
 - После этого чат отправляет `Authorization: Bearer <ключ>` автоматически (без ввода пользователем).
@@ -104,7 +104,7 @@ location /api/ {
 ```html
 <script>
   window.AI_BACKEND_URL = "https://ai.your-domain.ru";
-  window.AUTHORIZATION_KEY = "your_secret_key";
+  window.AUTHORIZATION_KEY = "MDE5YmZhNWQtZmFiOC03NmY5LWFjMjgtYzgzM2QxZmZiZmIxOmIzMTc3ZTgyLTYyMmQtNDQ2ZS1iNTY3LWJhNTJkZmY1NWJlYQ==";
 </script>
 ```
 
@@ -112,7 +112,7 @@ location /api/ {
 ```bash
 curl -X POST https://ai.your-domain.ru/api/chat \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your_secret_key" \
+  -H "Authorization: Bearer MDE5YmZhNWQtZmFiOC03NmY5LWFjMjgtYzgzM2QxZmZiZmIxOmIzMTc3ZTgyLTYyMmQtNDQ2ZS1iNTY3LWJhNTJkZmY1NWJlYQ==" \
   -d '{"message":"привет"}'
 ```
 
