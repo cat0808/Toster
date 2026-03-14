@@ -9,13 +9,13 @@
 }
 
 body[data-theme='light']{
-  --bg:#f6f8ff;
-  --bg2:#e9efff;
+  --bg:#f8faff;
+  --bg2:#eaf1ff;
   --panel:#ffffff;
-  --text:#1b2a4a;
-  --muted:#4f5f86;
-  --accent:#2c64ff;
-  --line:#c9d6ff;
+  --text:#12213f;
+  --muted:#42557f;
+  --accent:#1f57f0;
+  --line:#b8caf8;
 }
 
 *{box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
@@ -30,6 +30,7 @@ main{padding:0 20px 20px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
 
+#musicPlayer{width:100%;margin-top:10px;border-radius:10px;background:transparent;filter:none}
 .now-playing{margin:10px 2px 0;color:var(--muted);font-weight:600}
 #rutubeFrame{width:100%;margin-top:12px;border-radius:12px;min-height:360px;background:#000;border:1px solid var(--line)}
 
@@ -62,3 +63,19 @@ body[data-theme='light'] .bot{background:#dbe6ff;color:#17315f}
 .memory-card{aspect-ratio:1/1;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--text);font-size:22px}
 
 #puzzleArea p{margin:8px 0 12px;color:var(--muted)}
+
+
+body[data-theme='light'] .menu button,
+body[data-theme='light'] .tabs button,
+body[data-theme='light'] .row button,
+body[data-theme='light'] .list button{
+  background:#f3f7ff;
+  color:#132b57;
+  border-color:#aec2f7;
+}
+body[data-theme='light'] #chatInput,
+body[data-theme='light'] select,
+body[data-theme='light'] input{
+  background:#f8fbff;
+  color:#102247;
+}

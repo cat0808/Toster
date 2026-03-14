@@ -33,6 +33,8 @@ python3 server.py
 - В `.env` задайте:
 ```bash
 AUTHORIZATION_KEY=your_secret_key
+# можно и так:
+# AUTHORIZATION_KEY=Bearer your_secret_key
 ```
 - На фронтенде перед `app.js` передайте ключ:
 ```html
@@ -43,6 +45,7 @@ AUTHORIZATION_KEY=your_secret_key
 ```
 - Тогда запросы к `/api/chat` будут идти с заголовком:
 `Authorization: Bearer <ключ>`.
+Сервер также принимает вариант без префикса `Bearer` для совместимости.
 
 При необходимости на странице можно переопределить адрес ИИ:
 ```html

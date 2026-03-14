@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   (async function initMedia() {
     const manifest = await fetchJson('./media-manifest.json').catch(() => ({ music: [], photos: [] }));
 
-    const player = new Audio();
+    const player = document.getElementById('musicPlayer') || new Audio();
     const list = document.getElementById('musicList');
     const now = document.getElementById('musicNow');
     (manifest.music || []).forEach((m) => {
@@ -97,8 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
-  const AI_BACKEND_URL = window.AI_BACKEND_URL || '';
-  const AUTHORIZATION_KEY = window.AUTHORIZATION_KEY || '';
+  const AI_BACKEND_URL = (window.AI_BACKEND_URL || '').trim();
+  const AUTHORIZATION_KEY = (window.AUTHORIZATION_KEY || '').replace(/^Bearer\s+/i, '').trim();
   const chatLog = document.getElementById('chatLog');
 
   function addMsg(text, cls) {
@@ -121,7 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
       addMsg(text, 'user');
       input.value = '';
 
-      const chatUrl = `${AI_BACKEND_URL}/api/chat`;
+      const base = AI_BACKEND_URL.replace(/\/$/, '');
+      const chatUrl = `${base}/api/chat`; // base can be '' -> /api/chat
       try {
         const headers = { 'Content-Type': 'application/json' };
         if (AUTHORIZATION_KEY) headers.Authorization = `Bearer ${AUTHORIZATION_KEY}`;
@@ -151,7 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
     'Крестики-нолики': tic,
     'Камень-ножницы-бумага': rps,
     'Память: Найди пару': memory,
-    'Виселица': hangman
+    'Виселица': hangman,
+    'Математический блиц': mathQuiz,
+    'Лишнее слово': oddWord
   };
   let current = Object.keys(games)[0];
 
@@ -370,4 +373,85 @@ document.addEventListener('DOMContentLoaded', () => {
 
     render();
   }
+
+  function mathQuiz() {
+    const levels = { easy: [1, 9], medium: [5, 20], hard: [10, 40] };
+    const [min, max] = levels[difficulty.value];
+    let score = 0;
+
+    area.innerHTML = '<p>Реши 5 примеров. За каждый правильный — 1 балл.</p><p id="task"></p><input id="ans" type="number"/><button id="check">Ответ</button><p id="m"></p>';
+    const task = document.getElementById('task');
+    const m = document.getElementById('m');
+    let i = 0;
+    let right = 0;
+
+    const next = () => {
+      if (i >= 5) {
+        m.textContent = `Готово! Баллы: ${score}/5`;
+        task.textContent = 'Раунд завершён.';
+        return;
+      }
+      const a = min + Math.floor(Math.random() * (max - min + 1));
+      const b = min + Math.floor(Math.random() * (max - min + 1));
+      const op = Math.random() > 0.5 ? '+' : '-';
+      right = op === '+' ? a + b : a - b;
+      task.textContent = `Пример ${i + 1}/5: ${a} ${op} ${b} = ?`;
+      document.getElementById('ans').value = '';
+    };
+
+    document.getElementById('check').onclick = () => {
+      const v = Number(document.getElementById('ans').value);
+      if (!Number.isFinite(v)) return;
+      if (v === right) {
+        score += 1;
+        m.textContent = 'Верно!';
+      } else {
+        m.textContent = `Неверно. Правильный ответ: ${right}`;
+      }
+      i += 1;
+      next();
+    };
+    next();
+  }
+
+  function oddWord() {
+    const data = {
+      easy: [
+        ['яблоко', 'груша', 'слива', 'стол'],
+        ['кот', 'пёс', 'лиса', 'машина']
+      ],
+      medium: [
+        ['снег', 'дождь', 'град', 'вилка'],
+        ['книга', 'тетрадь', 'ручка', 'банан']
+      ],
+      hard: [
+        ['треугольник', 'квадрат', 'круг', 'апельсин'],
+        ['река', 'озеро', 'море', 'клавиатура']
+      ]
+    };
+    const set = data[difficulty.value][Math.floor(Math.random() * data[difficulty.value].length)];
+    const oddMap = {
+      стол: 'Остальные слова — фрукты.',
+      машина: 'Остальные слова — животные.',
+      вилка: 'Остальные слова — осадки.',
+      банан: 'Остальные слова — канцелярия.',
+      апельсин: 'Остальные слова — фигуры.',
+      клавиатура: 'Остальные слова — водоёмы.'
+    };
+
+    area.innerHTML = '<p>Выбери слово, которое не подходит к остальным.</p><div id="odd" class="row"></div><p id="m"></p>';
+    const wrap = document.getElementById('odd');
+    const m = document.getElementById('m');
+
+    set.sort(() => Math.random() - 0.5).forEach((w) => {
+      const b = document.createElement('button');
+      b.textContent = w;
+      b.onclick = () => {
+        if (oddMap[w]) m.textContent = `Верно! ${oddMap[w]}`;
+        else m.textContent = 'Почти. Попробуй ещё раз.';
+      };
+      wrap.append(b);
+    });
+  }
+
 });

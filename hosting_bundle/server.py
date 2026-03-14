@@ -41,11 +41,12 @@ def _fallback_reply(msg: str) -> str:
 def _is_authorized(headers) -> bool:
     if not AUTHORIZATION_KEY:
         return True
-    auth = headers.get('Authorization', '')
-    if not auth.startswith('Bearer '):
+    auth = headers.get('Authorization', '').strip()
+    if not auth:
         return False
-    token = auth.replace('Bearer ', '', 1).strip()
-    return token == AUTHORIZATION_KEY
+    token = auth.replace('Bearer ', '', 1).strip() if auth.lower().startswith('bearer ') else auth
+    expected = AUTHORIZATION_KEY.replace('Bearer ', '', 1).strip()
+    return token == expected
 
 
 def _fetch_token():
