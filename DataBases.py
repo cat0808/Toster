@@ -26,7 +26,7 @@ def init_db():
         )
         conn.commit()
 
-def variants_num(data,id_user):
+def variants_nums(data, id_user):
     with closing(get_connection()) as conn:
         conn.execute(
             """

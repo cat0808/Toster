@@ -1,8 +1,9 @@
 import telebot
 from telebot import types
 import DataBases
-import Aigiga
+import Aigemeni
 import Tokens
+import PdfCreater
 
 bot = telebot.TeleBot(Tokens.Telebot_Token)
 DataBases.init_db()
@@ -35,24 +36,33 @@ def variants_callback(call):
     count = call.data.split("_")[1]
     bot.answer_callback_query(call.id)
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-    bot.send_message(call.message.chat.id, f"{count}-варианта")
-    DataBases.variants_num(count,call.message.from_user.id)
+    DataBases.variants_nums(int(count), call.message.chat.id)
+    bot.send_message(call.message.chat.id, f"{count}-варианта. Напишите тему контрольной")
+
 
 @bot.message_handler(commands=['end_control_create'])
-def test(message):
-    DataBases.variants_num(None,message.from_user.id)
+def EndControl(message):
+    DataBases.variants_nums(None, message.from_user.id)
     DataBases.add_exam(0, message.from_user.id)
     bot.send_message(message.from_user.id,"Данные обнулены")
 
 @bot.message_handler(content_types=['text'])
 def AiRequest(message):
-    print(message.text) #Debug система
-    try:
-        answer = Aigiga.giga.chat(message.text).choices[0].message.content
-    except Exception as error:
-        print("Ошибка GigaChat:", error) #Debug система
-        answer = "Не удалось получить ответ, попробуйте ещё раз."
-    bot.send_message(message.chat.id, answer)
+    df = DataBases.get_user(message.from_user.id)
+
+    if df["exam_create"] == 1:
+        print("Создай контрольную по теме: " + message.text + " в " + str(df["variants_num"]) + " вариантах. Текстовый ответ адаптируй под pdf формат")  # Debug система
+        answer = "Создай контрольную по теме:" + message.text + "в"+df[5]+"вариантах. Текстовый ответ адаптируй под pdf формат"
+        output = Aigemeni.ask(message.from_user.id,answer)
+        if output != 0:
+            pdf_file = PdfCreater.text_to_pdf(output)
+            pdf_file.name = "Ответ.pdf"
+            bot.send_document(message.from_user.id, pdf_file, caption="Ответ в PDF \nПрошу проверить файл перед распечаткой на возможную ошибку")
+        else:
+            bot.send_message(message.chat.id, "Не удалось получить ответ, попробуйте ещё раз.")
+    else:
+       bot.send_message(message.from_user.id,"Создайте контрольную")
+
 
 
 bot.polling(none_stop=True, interval=0)
