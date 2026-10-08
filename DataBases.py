@@ -18,9 +18,35 @@ def init_db():
                 id INTEGER PRIMARY KEY,          -- Telegram user id
                 username TEXT,
                 first_name TEXT,
+                exam_create INTEGER,
+                variants_num INTEGER,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
             """
+        )
+        conn.commit()
+
+def variants_num(data,id_user):
+    with closing(get_connection()) as conn:
+        conn.execute(
+            """
+            UPDATE users 
+            SET variants_num = ?
+            WHERE id = ?
+            """,
+            (data,id_user),
+        )
+        conn.commit()
+
+def add_exam(data,id_user):
+    with closing(get_connection()) as conn:
+        conn.execute(
+            """
+            UPDATE users 
+            SET exam_create = ?
+            WHERE id = ?
+            """,
+            (data,id_user),
         )
         conn.commit()
 
