@@ -2,8 +2,9 @@ import telebot
 from telebot import types
 import DataBases
 import Aigemeni
+import Aigiga
+import FixPdf
 import Tokens
-import PdfCreater
 
 bot = telebot.TeleBot(Tokens.Telebot_Token)
 DataBases.init_db()
@@ -44,24 +45,30 @@ def variants_callback(call):
 def EndControl(message):
     DataBases.variants_nums(None, message.from_user.id)
     DataBases.add_exam(0, message.from_user.id)
-    bot.send_message(message.from_user.id,"Данные обнулены")
 
 @bot.message_handler(content_types=['text'])
 def AiRequest(message):
     df = DataBases.get_user(message.from_user.id)
 
     if df["exam_create"] == 1:
-        print("Создай контрольную по теме: " + message.text + " в " + str(df["variants_num"]) + " вариантах. Текстовый ответ адаптируй под pdf формат")  # Debug система
-        answer = "Создай контрольную по теме:" + message.text + "в"+df[5]+"вариантах. Текстовый ответ адаптируй под pdf формат"
+        print("Создай контрольную по теме: " + message.text + " в " + str(df["variants_num"]) + " вариантах.")  # Debug система
+        bot.send_message(message.chat.id, "Ожидайте")
+        answer = "Создай контрольную по теме:" + message.text + "в"+str(df["variants_num"])+"вариантах."
         output = Aigemeni.ask(message.from_user.id,answer)
         if output != 0:
-            pdf_file = PdfCreater.text_to_pdf(output)
-            pdf_file.name = "Ответ.pdf"
+            pdf_file = FixPdf.start_convertation(output)
+            EndControl(message)
             bot.send_document(message.from_user.id, pdf_file, caption="Ответ в PDF \nПрошу проверить файл перед распечаткой на возможную ошибку")
         else:
-            bot.send_message(message.chat.id, "Не удалось получить ответ, попробуйте ещё раз.")
+            print("Gemini не ответил") #Debug система
+            output2 = Aigiga.giga.chat(answer).choices[0].message.content
+            pdf_file2 = FixPdf.start_convertation(output2)
+            EndControl(message)
+            bot.send_document(message.from_user.id, pdf_file2,caption="Ответ в PDF \nПрошу проверить файл перед распечаткой на возможную ошибку")
+
     else:
-       bot.send_message(message.from_user.id,"Создайте контрольную")
+        EndControl(message)
+        bot.send_message(message.from_user.id,"Создайте контрольную")
 
 
 

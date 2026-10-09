@@ -5,8 +5,8 @@ import Tokens
 _chats = {}
 
 client = genai.Client(api_key=Tokens.GoogleAi_Token)
-MODEL = "gemini-3.5-flash"
-SYSTEM_PROMPT = "Ты создатель контрольных работ,текст ответа адаптируй под pdf формат"
+MODEL = "gemini-3.6-flash"
+SYSTEM_PROMPT = "Ты создатель контрольных работ."
 
 
 def _get_chat(user_id: int):
