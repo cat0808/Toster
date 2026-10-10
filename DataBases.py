@@ -20,6 +20,7 @@ def init_db():
                 first_name TEXT,
                 exam_create INTEGER,
                 variants_num INTEGER,
+                class_num INTEGER,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
             """
@@ -32,6 +33,18 @@ def variants_nums(data, id_user):
             """
             UPDATE users 
             SET variants_num = ?
+            WHERE id = ?
+            """,
+            (data,id_user),
+        )
+        conn.commit()
+
+def class_select(data, id_user):
+    with closing(get_connection()) as conn:
+        conn.execute(
+            """
+            UPDATE users 
+            SET class_num = ?
             WHERE id = ?
             """,
             (data,id_user),
